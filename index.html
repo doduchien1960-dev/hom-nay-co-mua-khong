@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- Leaflet CSS (Bản đồ Open-source) -->
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
   <!-- Tailwind CSS CDN -->
@@ -79,7 +79,7 @@
       border-radius: 3px;
     }
 
-    /* Tùy biến nút điều khiển của Leaflet Map cho khớp phong cách tối */
+    /* Tùy biến Leaflet Map & Bộ lọc Dark Mode chuẩn cho OpenStreetMap */
     .leaflet-control-zoom a {
       background-color: #0F1626 !important;
       color: #00E5FF !important;
@@ -91,6 +91,11 @@
     .leaflet-container {
       background: #05080E !important;
       font-family: inherit !important;
+    }
+
+    /* Bộ lọc biến OpenStreetMap thành bản đồ nền Dark Mode không cần API Key */
+    .scada-dark-tiles {
+      filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(90%);
     }
   </style>
 </head>
@@ -171,7 +176,6 @@
           <!-- KHỐI HERO: BIỂU TƯỢNG THỜI TIẾT TỨC THỜI LỚN & CHỈ SỐ NHANH -->
           <div class="bg-telemetry-bg/90 border border-telemetry-subtle p-3.5 flex items-center justify-between gap-4">
             <div class="flex items-center gap-3.5">
-              <!-- Icon lớn góc trái (Hero Weather Glyph) -->
               <div id="heroWeatherIcon" class="text-4xl sm:text-5xl select-none filter drop-shadow-[0_0_12px_rgba(0,229,255,0.4)]">
                 🌧️
               </div>
@@ -188,7 +192,6 @@
               </div>
             </div>
 
-            <!-- Badge mưa tức thời -->
             <div class="text-right">
               <span class="text-[9px] text-slate-400 uppercase block">CƯỜNG ĐỘ LÚC NÀY</span>
               <span id="heroRainNow" class="text-base font-bold text-telemetry-amber font-mono">1.8 mm/h</span>
@@ -276,10 +279,10 @@
 
       </div>
 
-      <!-- CỘT PHẢI (7 COLS): BẢN ĐỒ RADAR MÂY MƯA (THAY CHO MẶT CẮT CỐNG) & TIMELINE 24H -->
+      <!-- CỘT PHẢI (7 COLS): BẢN ĐỒ RADAR KHÔNG CẦN KEY & TIMELINE 24H -->
       <div class="lg:col-span-7 flex flex-col gap-4">
 
-        <!-- BẢN ĐỒ RADAR KHÍ TƯỢNG TRỰC TIẾP (DOPPLER RADAR MAP) -->
+        <!-- BẢN ĐỒ RADAR KHÍ TƯỢNG TRỰC TIẾP -->
         <div class="bg-telemetry-card border border-telemetry-border p-4 relative flex flex-col">
           <div class="flex flex-wrap justify-between items-center gap-2 mb-2 text-xs">
             <div class="flex items-center gap-2">
@@ -298,7 +301,6 @@
             <!-- Bảng điều khiển Overlay nổi trên bản đồ -->
             <div class="absolute bottom-3 left-3 right-3 z-[1000] bg-telemetry-card/90 backdrop-blur border border-telemetry-border p-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
               
-              <!-- Nút Play / Pause Animation -->
               <div class="flex items-center gap-2">
                 <button id="btnPlayRadar" class="w-8 h-8 rounded bg-telemetry-cyan hover:bg-cyan-300 text-slate-950 flex items-center justify-center font-black transition-all">
                   <span id="playIcon">⏸</span>
@@ -342,10 +344,8 @@
             <span class="text-slate-400 text-[10px]">BẤM VÀO CỘT HOẶC KÉO THANH ĐỂ KIỂM TRA MƯA TỪNG GIỜ</span>
           </div>
 
-          <!-- Container 24 Cột Giờ Tích Hợp Icon Thời Tiết Lớn -->
-          <div id="hyetographBarContainer" class="h-32 flex items-end gap-1 pt-6 pb-2 border-b border-telemetry-border overflow-x-auto select-none">
-            <!-- Render động bằng JavaScript -->
-          </div>
+          <!-- Container 24 Cột Giờ -->
+          <div id="hyetographBarContainer" class="h-32 flex items-end gap-1 pt-6 pb-2 border-b border-telemetry-border overflow-x-auto select-none"></div>
 
           <!-- Thanh trượt Scrubber -->
           <input id="hourScrubber" type="range" min="0" max="23" value="17" class="w-full mt-3 accent-telemetry-cyan cursor-pointer" />
@@ -363,7 +363,7 @@
 
     </div>
 
-    <!-- HÀNG 2: BẢN ĐỒ VI KHÍ HẬU QUẬN/HUYỆN & BẢNG CẢNH BÁO RỐN NGẬP (LẤP ĐẦY KHÔNG GIAN ĐÁY) -->
+    <!-- HÀNG 2: BẢN ĐỒ VI KHÍ HẬU QUẬN/HUYỆN & BẢNG CẢNH BÁO RỐN NGẬP -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
       
       <!-- KHỐI 1: BẢN ĐỒ VI KHÍ HẬU CÁC QUẬN / HUYỆN (7 COLS) -->
@@ -377,9 +377,7 @@
         </div>
 
         <!-- Lưới 6 Quận Huyện Trọng Điểm -->
-        <div id="districtGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 flex-grow">
-          <!-- Render tự động 6 quận bằng JS -->
-        </div>
+        <div id="districtGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 flex-grow"></div>
 
         <div class="mt-3 text-[11px] text-slate-400 border-t border-telemetry-subtle pt-2 flex items-center justify-between">
           <span>⚡ Cập nhật đồng bộ qua mạng lưới Open-Meteo Multi-Coordinate API.</span>
@@ -390,7 +388,7 @@
       <!-- KHỐI 2: CHẤT LƯỢNG KHÔNG KHÍ (AQI) & DANH MỤC RỐN NGẬP TRỌNG ĐIỂM (5 COLS) -->
       <div class="lg:col-span-5 flex flex-col gap-4">
         
-        <!-- Widget AQI nén gọn -->
+        <!-- Widget AQI -->
         <div class="bg-telemetry-card border border-telemetry-border p-3.5">
           <div class="flex justify-between items-center text-xs">
             <span class="text-white font-bold flex items-center gap-1.5">
@@ -425,9 +423,7 @@
             <span class="text-[10px] text-telemetry-amber font-bold">RỦI RO THỜI ĐIỂM NÀY</span>
           </div>
 
-          <div id="hotspotList" class="space-y-1.5 text-xs">
-            <!-- Render động danh sách rốn ngập -->
-          </div>
+          <div id="hotspotList" class="space-y-1.5 text-xs"></div>
         </div>
 
       </div>
@@ -436,22 +432,20 @@
 
   </main>
 
-  <!-- FOOTER SCADA TẬN CÙNG TRANG -->
+  <!-- FOOTER SCADA -->
   <footer class="border-t border-telemetry-border bg-slate-950 px-4 py-2 text-xs flex items-center justify-between font-mono">
     <div class="flex items-center gap-2 w-full max-w-2xl">
       <span class="text-telemetry-cyan font-bold select-none">SCADA:</span>
       <input id="cadCommandLine" type="text" placeholder="Gõ 'REGEN' để làm mới, 'STORM' để thử tải siêu bão..." class="bg-transparent text-white w-full outline-none border-none placeholder:text-slate-600 focus:placeholder:text-transparent text-xs" />
     </div>
     <div id="cadOutputMsg" class="text-telemetry-amber text-[11px] hidden sm:block truncate ml-4">
-      Hệ thống vận hành bình thường. Radar vệ tinh đã sẵn sàng.
+      Hệ thống vận hành bình thường. Bản đồ vệ tinh sẵn sàng.
     </div>
   </footer>
 
-  <!-- TOÀN BỘ SCRIPT ĐIỀU HÀNH & TÍCH HỢP RADAR THỜI GIAN THỰC -->
+  <!-- SCRIPT LOGIC HOÀN CHỈNH -->
   <script>
-    // ==========================================================
-    // 1. CƠ SỞ TỌA ĐỘ VÀ MẠNG LƯỚI ĐỊA PHƯƠNG
-    // ==========================================================
+    // 1. Dữ liệu thành phố & quận huyện
     const CITY_DATABASE = {
       hcm: {
         name: 'TP. HỒ CHÍ MINH',
@@ -527,7 +521,6 @@
       }
     };
 
-    // State ứng dụng
     let state = {
       cityKey: 'hcm',
       hourlyRain: Array(24).fill(0),
@@ -546,7 +539,6 @@
       districtData: []
     };
 
-    // Helper: Chuyển mã WMO thời tiết thành Icon và Nhãn
     function getWeatherMeta(code) {
       if (code === 0) return { icon: '☀️', label: 'Quang đãng, trời nắng' };
       if (code >= 1 && code <= 3) return { icon: '⛅', label: 'Có mây rải rác' };
@@ -557,9 +549,7 @@
       return { icon: '🌦️', label: 'Mưa rải rác' };
     }
 
-    // ==========================================================
-    // 2. KHỞI TẠO BẢN ĐỒ RADAR LEAFLET & RAINVIEWER API
-    // ==========================================================
+    // 2. Khởi tạo Bản đồ Leaflet với OpenStreetMap Dark Filter (Không bao giờ lỗi API Key)
     let map = null;
     let radarLayers = [];
     let radarFrames = [];
@@ -570,7 +560,6 @@
     function initRadarMap() {
       const city = CITY_DATABASE[state.cityKey];
       
-      // Tạo bản đồ Leaflet
       map = L.map('radarMap', {
         center: [city.lat, city.lon],
         zoom: city.zoom || 11,
@@ -578,13 +567,13 @@
         attributionControl: false
       });
 
-      // Lớp bản đồ nền CartoDB Dark Matter (Đen sâu SCADA)
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      // Lớp bản đồ nền OpenStreetMap miễn phí vĩnh viễn
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 18,
-        subdomains: 'abcd'
+        className: 'scada-dark-tiles'
       }).addTo(map);
 
-      // Thêm Marker trung tâm thành phố với vòng phát sóng
+      // Marker vị trí trung tâm
       const markerIcon = L.divIcon({
         className: 'custom-radar-pin',
         html: `<div class="w-3.5 h-3.5 bg-telemetry-cyan rounded-full border-2 border-white shadow-[0_0_12px_#00E5FF] led-live"></div>`,
@@ -592,7 +581,6 @@
       });
       L.marker([city.lat, city.lon], { icon: markerIcon }).addTo(map);
 
-      // Tải các khung ảnh Radar trực tiếp từ RainViewer
       loadRainViewerRadar();
     }
 
@@ -607,13 +595,11 @@
           return;
         }
 
-        // Gom các khung hình quá khứ (past) và dự báo tương lai (nowcast)
         radarFrames = [...data.radar.past];
         if (data.radar.nowcast) {
           radarFrames = radarFrames.concat(data.radar.nowcast);
         }
 
-        // Tạo các lớp Tile layer cho từng khung
         radarLayers = radarFrames.map(frame => {
           return L.tileLayer(`${data.host}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
             opacity: 0,
@@ -621,12 +607,11 @@
           }).addTo(map);
         });
 
-        // Bắt đầu vòng lặp hiển thị mây mưa
-        currentRadarIndex = radarFrames.length - 1; // Bắt đầu ở khung mới nhất
+        currentRadarIndex = radarFrames.length - 1;
         showRadarFrame(currentRadarIndex);
         startRadarLoop();
       } catch (err) {
-        console.warn('Không thể tải RainViewer API, dùng chế độ radar dự phòng:', err);
+        console.warn('Không thể tải RainViewer API:', err);
         statusBadge.innerText = 'DỮ LIỆU RADAR VỆ TINH NỘI ĐỊA';
       }
     }
@@ -634,12 +619,10 @@
     function showRadarFrame(index) {
       if (!radarLayers.length) return;
 
-      // Ẩn tất cả các layer khác, chỉ hiển thị layer hiện tại
       radarLayers.forEach((layer, i) => {
         layer.setOpacity(i === index ? 0.75 : 0);
       });
 
-      // Hiển thị nhãn thời gian của khung radar
       const frameTime = new Date(radarFrames[index].time * 1000);
       const hours = String(frameTime.getHours()).padStart(2, '0');
       const minutes = String(frameTime.getMinutes()).padStart(2, '0');
@@ -661,12 +644,10 @@
         if (!isRadarPlaying || !radarFrames.length) return;
         currentRadarIndex = (currentRadarIndex + 1) % radarFrames.length;
         showRadarFrame(currentRadarIndex);
-      }, 800); // 800ms mỗi khung hình mây trôi
+      }, 800);
     }
 
-    // ==========================================================
-    // 3. HIỆU ỨNG ÂM THANH BẰNG WEB AUDIO API
-    // ==========================================================
+    // 3. Hiệu ứng âm thanh SFX
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playSfx(type = 'click') {
       if (!state.soundEnabled) return;
@@ -697,22 +678,18 @@
       } catch (e) {}
     }
 
-    // ==========================================================
-    // 4. FETCH DỮ LIỆU ĐỒNG THỜI (WEATHER + MULTI-DISTRICT + AQI)
-    // ==========================================================
+    // 4. Fetch telemetry từ Open-Meteo
     async function fetchFullTelemetry(cityKey) {
       const city = CITY_DATABASE[cityKey];
       document.getElementById('hudLat').innerText = city.lat.toFixed(2);
       document.getElementById('hudLon').innerText = city.lon.toFixed(2);
       document.getElementById('cadOutputMsg').innerText = `Đang đồng bộ Radar vệ tinh & Vi khí hậu ${city.name}...`;
 
-      // Di chuyển bản đồ Leaflet mượt mà đến thành phố mới
       if (map) {
         map.flyTo([city.lat, city.lon], city.zoom || 11, { duration: 1.5 });
       }
 
       try {
-        // 1. Fetch Dữ liệu Thành Phố Chính
         const mainUrl = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=precipitation,temperature_2m,weather_code&hourly=precipitation,weather_code,temperature_2m&daily=precipitation_sum&timezone=Asia%2FBangkok`;
         const mainRes = await fetch(mainUrl);
         const mainData = await mainRes.json();
@@ -749,7 +726,7 @@
         state.selectedHour = peakH;
         document.getElementById('hourScrubber').value = peakH;
 
-        // 2. Fetch ĐỒNG THỜI 6 QUẬN/HUYỆN (Multi-Coordinate Batch)
+        // Fetch vi khí hậu quận/huyện
         const lats = city.districts.map(d => d.lat).join(',');
         const lons = city.districts.map(d => d.lon).join(',');
         const districtUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&current=precipitation,weather_code,temperature_2m&timezone=Asia%2FBangkok`;
@@ -769,7 +746,7 @@
           };
         });
 
-        // 3. Fetch AQI
+        // Fetch AQI
         try {
           const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${city.lat}&longitude=${city.lon}&current=us_aqi,pm2_5`;
           const aqiRes = await fetch(aqiUrl);
@@ -783,10 +760,10 @@
           state.pm25 = 11.5;
         }
 
-        document.getElementById('cadOutputMsg').innerText = `Đã đồng bộ radar và số liệu thực tế tại ${city.name}.`;
+        document.getElementById('cadOutputMsg').innerText = `Đã kết nối radar vệ tinh và các trạm đo tại ${city.name}.`;
         renderDashboard();
       } catch (err) {
-        console.warn('API error, chuyển sang kịch bản dữ liệu mô phỏng:', err);
+        console.warn('API error, chuyển sang kịch bản dữ liệu mẫu:', err);
         state.currentRain = 2.4;
         state.currentTemp = 31;
         state.currentWeatherCode = 61;
@@ -810,13 +787,10 @@
       }
     }
 
-    // ==========================================================
-    // 5. BỘ ĐỊNH DANH NHÂN VẬT CƠN MƯA & RAIN SCORE
-    // ==========================================================
     function calculateDayScore() {
       let baseScore = (state.precipSum * 0.4) + (state.intensityMax * 1.5);
       if (state.peakHour.includes('16') || state.peakHour.includes('17') || state.peakHour.includes('18')) {
-        baseScore += 12; // Phạt giờ tan tầm
+        baseScore += 12;
       }
       return Math.min(100, Math.max(12, Math.round(baseScore)));
     }
@@ -865,15 +839,12 @@
       }
     }
 
-    // ==========================================================
-    // 6. RENDER GIAO DIỆN
-    // ==========================================================
+    // 5. Render giao diện
     function renderDashboard() {
       const city = CITY_DATABASE[state.cityKey];
       const score = calculateDayScore();
       const character = evaluateRainCharacter(score);
 
-      // 1. Khối Hero lớn góc trái
       const currentMeta = getWeatherMeta(state.currentWeatherCode);
       document.getElementById('heroWeatherIcon').innerText = currentMeta.icon;
       document.getElementById('heroTemp').innerText = `${state.currentTemp}°C`;
@@ -881,7 +852,6 @@
       document.getElementById('heroFeelsLike').innerText = `${state.currentTemp + 3}°C`;
       document.getElementById('heroRainNow').innerText = `${state.currentRain} mm/h`;
 
-      // 2. Thẻ Card Blueprint
       document.getElementById('cardLocationTitle').innerText = city.name;
       document.getElementById('cardDate').innerText = `20/09/2026 — QUAN TRẮC TRỰC TIẾP`;
       document.getElementById('rainCharacterName').innerText = character.name;
@@ -910,21 +880,14 @@
       document.getElementById('riskCar').innerText = character.car;
       document.getElementById('engineerQuote').innerText = character.quote;
 
-      // 3. Render Timeline 24H với ICON TO RÕ
       renderTimelineWithBigIcons();
-
-      // 4. Render Bản đồ Vi khí hậu 6 Quận/Huyện
       renderDistrictGrid();
-
-      // 5. Render Danh mục rốn ngập trọng điểm
       renderHotspotList();
 
-      // 6. Cập nhật AQI
       document.getElementById('aqiVal').innerText = state.aqi;
       document.getElementById('pm25Val').innerHTML = `${state.pm25} <span class="text-[8px] font-normal text-slate-500">µg/m³</span>`;
     }
 
-    // Biểu đồ 24 cột giờ với Icon to
     function renderTimelineWithBigIcons() {
       const container = document.getElementById('hyetographBarContainer');
       container.innerHTML = '';
@@ -964,7 +927,6 @@
       document.getElementById('scrubberTimeBadge').innerText = `${String(state.selectedHour).padStart(2, '0')}:00`;
     }
 
-    // Grid Vi khí hậu 6 Quận/Huyện
     function renderDistrictGrid() {
       const container = document.getElementById('districtGrid');
       container.innerHTML = '';
@@ -997,7 +959,6 @@
       });
     }
 
-    // Danh mục rốn ngập trọng điểm
     function renderHotspotList() {
       const container = document.getElementById('hotspotList');
       container.innerHTML = '';
@@ -1029,27 +990,21 @@
       });
     }
 
-    // ==========================================================
-    // 7. SỰ KIỆN TƯƠNG TÁC
-    // ==========================================================
+    // 6. Sự kiện tương tác
     document.addEventListener('DOMContentLoaded', () => {
-      // Khởi tạo bản đồ Radar Leaflet
       initRadarMap();
 
-      // Đồng hồ hệ thống SCADA
       setInterval(() => {
         const now = new Date();
         document.getElementById('sysClock').innerText = now.toTimeString().split(' ')[0] + ' UTC+7';
       }, 1000);
 
-      // Đổi địa bàn / thành phố
       document.getElementById('citySelect').addEventListener('change', (e) => {
         state.cityKey = e.target.value;
         playSfx('switch');
         fetchFullTelemetry(state.cityKey);
       });
 
-      // Play / Pause Radar Loop
       document.getElementById('btnPlayRadar').addEventListener('click', () => {
         isRadarPlaying = !isRadarPlaying;
         playSfx('click');
@@ -1057,25 +1012,22 @@
         document.getElementById('radarStatusText').innerText = isRadarPlaying ? 'Chuyển động mây trực tiếp' : 'Đang tạm dừng ảnh radar';
       });
 
-      // Kéo thanh trượt Scrubber 24h
       document.getElementById('hourScrubber').addEventListener('input', (e) => {
         state.selectedHour = parseInt(e.target.value);
         playSfx('click');
         renderDashboard();
       });
 
-      // Nút âm thanh
       document.getElementById('soundToggle').addEventListener('click', () => {
         state.soundEnabled = !state.soundEnabled;
         document.getElementById('soundLabel').innerText = state.soundEnabled ? '🔊 SFX ON' : '🔇 SFX OFF';
         if (state.soundEnabled) playSfx('switch');
       });
 
-      // Xuất phiếu ảnh PNG
       document.getElementById('btnExport').addEventListener('click', () => {
         playSfx('switch');
         const card = document.getElementById('exportableCard');
-        document.getElementById('cadOutputMsg').innerText = 'Đang trích xuất ảnh phiếu kiểm định độ nét cao...';
+        document.getElementById('cadOutputMsg').innerText = 'Đang trích xuất ảnh phiếu kiểm định...';
 
         html2canvas(card, {
           backgroundColor: '#0F1626',
@@ -1089,7 +1041,6 @@
         });
       });
 
-      // Share link
       document.getElementById('btnShare').addEventListener('click', () => {
         playSfx('click');
         if (navigator.clipboard) {
@@ -1098,7 +1049,6 @@
         }
       });
 
-      // Command Line CAD
       const cmd = document.getElementById('cadCommandLine');
       cmd.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -1113,14 +1063,13 @@
             state.intensityMax = 60.0;
             state.currentRain = 25.0;
             renderDashboard();
-            document.getElementById('cadOutputMsg').innerText = 'Kích hoạt kịch bản siêu bão nhiệt đới 60mm/h!';
+            document.getElementById('cadOutputMsg').innerText = 'Kích hoạt kịch bản siêu bão 60mm/h!';
           } else {
             document.getElementById('cadOutputMsg').innerText = `Lệnh: REGEN, STORM`;
           }
         }
       });
 
-      // Khởi động lấy dữ liệu thời tiết
       fetchFullTelemetry('hcm');
     });
   </script>
