@@ -1,144 +1,188 @@
 <!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="theme-color" content="#f7f6f2" />
-  <meta name="description" content="Hôm Nay Có Mưa Không? — một câu chuyện về ngày mưa, kể bằng dữ liệu thời tiết và radar." />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f4ef">
+  <meta name="description" content="Hôm Nay Có Mưa Không? — Một ngày mưa, kể bằng dữ liệu.">
+  <meta property="og:title" content="Hôm Nay Có Mưa Không?">
+  <meta property="og:description" content="Một ngày mưa, kể bằng dữ liệu.">
   <title>Hôm Nay Có Mưa Không? — Daily Rain Story</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3b7KqY5Q1h4G3FjQ8Q5f4M4f8cY0Q=" crossorigin="" />
-  <link rel="stylesheet" href="./css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
   <div class="site-shell">
-    <header class="nav container">
+    <header class="topbar">
       <a class="brand" href="#top" aria-label="Hôm Nay Có Mưa Không?">
-        <span class="brand-mark">☂</span>
+        <span class="brand-mark" aria-hidden="true"><span></span></span>
         <span>HÔM NAY CÓ MƯA KHÔNG?</span>
       </a>
-      <div class="nav-actions">
-        <button class="location-btn" id="locationBtn" type="button" title="Đổi vị trí">
-          <span>TP.HCM</span><span class="chevron">⌄</span>
+      <div class="topbar-actions">
+        <button id="locationButton" class="location-pill" type="button" aria-label="Chọn thành phố">
+          <span class="status-dot"></span><span id="locationLabel">TP.HCM</span><span class="chevron">⌄</span>
         </button>
-        <span class="live-dot" aria-hidden="true"></span>
         <span class="today-label">Hôm nay</span>
       </div>
     </header>
 
     <main id="top">
-      <section class="hero container section-reveal">
+      <section class="hero section">
         <div class="hero-copy">
-          <p class="eyebrow" id="heroLocation">TP. HỒ CHÍ MINH · HÔM NAY</p>
-          <h1 id="heroHeadline">Hôm nay, thành phố có vẻ không muốn cho bạn về sớm.</h1>
-          <p class="hero-sub" id="heroSubline">Đang lấy dữ liệu thời tiết và dự báo mưa cho bạn.</p>
-          <div class="hero-stats" id="heroStats">
-            <div class="stat"><span class="stat-value mono" id="totalRain">—</span><span class="stat-label">mm hôm nay</span></div>
-            <div class="stat"><span class="stat-value mono" id="peakIntensity">—</span><span class="stat-label">mm/h cao nhất</span></div>
-            <div class="stat"><span class="stat-value mono" id="peakHour">—</span><span class="stat-label">giờ mưa mạnh</span></div>
+          <p class="eyebrow"><span id="heroLocation">TP. HỒ CHÍ MINH</span><span>·</span><span id="heroDate">HÔM NAY</span></p>
+          <h1>Hôm nay, thành phố có vẻ <em>không muốn</em> cho bạn về sớm.</h1>
+          <p id="heroIntro" class="hero-intro">Một ngày mưa, kể bằng dữ liệu.</p>
+
+          <div class="hero-stats" aria-label="Tóm tắt mưa hôm nay">
+            <div class="hero-stat">
+              <span class="stat-value"><span id="totalRain">—</span><small>mm</small></span>
+              <span class="stat-label">HÔM NAY</span>
+            </div>
+            <div class="hero-stat">
+              <span class="stat-value"><span id="peakIntensity">—</span><small>mm/h</small></span>
+              <span class="stat-label">ĐỈNH MƯA</span>
+            </div>
+            <div class="hero-stat">
+              <span class="stat-value" id="peakHour">—</span>
+              <span class="stat-label">GIỜ ĐỈNH</span>
+            </div>
           </div>
-          <div class="source-note">Dữ liệu thời tiết: Open-Meteo · Radar: RainViewer · Bản đồ: OpenStreetMap</div>
+
+          <div class="source-line">
+            <span>Dữ liệu thời tiết: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a></span>
+            <span>·</span>
+            <span>Radar: <a href="https://www.rainviewer.com/" target="_blank" rel="noreferrer">RainViewer</a></span>
+            <span>·</span>
+            <span>Bản đồ: OpenStreetMap</span>
+          </div>
         </div>
-        <div class="hero-visual" id="heroVisual" aria-label="Minh hoạ thời tiết">
-          <div class="sun-orb"></div>
-          <div class="cloud cloud-a"></div><div class="cloud cloud-b"></div>
-          <div class="rain-drops" id="rainDrops"></div>
-          <div class="city-line"></div>
-          <div class="hero-badge"><span id="heroWeatherIcon">🌦️</span><span id="heroWeatherText">Đang tải…</span></div>
+
+        <div class="hero-visual" aria-label="Minh họa thời tiết">
+          <div class="weather-orbit orbit-a"></div>
+          <div class="weather-orbit orbit-b"></div>
+          <div class="weather-art">
+            <div class="cloud cloud-back"></div>
+            <div class="cloud cloud-main"></div>
+            <div class="rain-streaks" aria-hidden="true"></div>
+            <div class="weather-glow"></div>
+          </div>
+          <div class="hero-caption"><span id="heroCondition">ĐANG ĐỌC NHỊP MƯA</span><strong id="heroTemperature">—°</strong></div>
         </div>
       </section>
 
-      <section class="story container section-reveal">
+      <section class="section story-section" id="story">
         <div class="section-kicker">01 · RAIN STORY</div>
-        <div class="story-grid">
-          <div>
-            <h2 id="rainPersonality">MƯA ĐANG VIẾT CÂU CHUYỆN CỦA RIÊNG NÓ.</h2>
-            <p class="lead" id="rainDescription">Chúng tôi đang đọc nhịp mưa hôm nay.</p>
+        <div class="story-card">
+          <div class="story-main">
+            <p class="story-overline">RAIN PERSONALITY</p>
+            <h2 id="storyTitle">Mưa đang viết câu chuyện của riêng nó.</h2>
+            <p id="storySubtitle" class="story-subtitle">Chúng tôi đang đọc nhịp mưa hôm nay.</p>
+            <p id="storyQuote" class="story-quote">“Đang kiểm tra xem hôm nay có cần mang áo mưa hay không.”</p>
           </div>
-          <div class="fun-card">
-            <div class="fun-label">MỨC ĐỘ PHIỀN</div>
-            <div class="fun-score"><span id="annoyanceScore">—</span><small>/10</small></div>
-            <div class="score-track"><span id="scoreBar"></span></div>
-            <p id="funExplanation">Đây là chỉ số vui dựa trên lượng mưa, cường độ và thời điểm mưa.</p>
+          <div class="story-score">
+            <span class="score-number" id="annoyanceScore">—</span><span class="score-denom">/10</span>
+            <span class="score-label">MỨC ĐỘ PHIỀN</span>
           </div>
         </div>
-        <div class="engineer-quote" id="engineerQuote">“Đang kiểm tra xem hôm nay có cần mang áo mưa hay không.”</div>
+        <p class="section-note">Chỉ số vui dựa trên lượng mưa, cường độ và thời điểm mưa; không phải cảnh báo chính thức.</p>
       </section>
 
-      <section class="practical container section-reveal">
+      <section class="section practical-section" id="practical">
         <div class="section-heading">
-          <div><div class="section-kicker">02 · PRACTICAL</div><h2>NẾU HÔM NAY PHẢI RA ĐƯỜNG</h2></div>
+          <div><div class="section-kicker">02 · PRACTICAL</div><h2>Nếu hôm nay phải ra đường</h2></div>
           <p>Không phải dự báo chính thức — chỉ là cách đọc dữ liệu theo kiểu đời thường.</p>
         </div>
-        <div class="advice-grid">
-          <article class="advice-card"><div class="advice-icon">🛵</div><div><span>XE MÁY</span><strong id="bikeAdvice">Đang xem…</strong></div></article>
-          <article class="advice-card"><div class="advice-icon">👟</div><div><span>GIÀY TRẮNG</span><strong id="shoeAdvice">Đang xem…</strong></div></article>
-          <article class="advice-card"><div class="advice-icon">🚗</div><div><span>Ô TÔ</span><strong id="carAdvice">Đang xem…</strong></div></article>
-          <article class="advice-card"><div class="advice-icon">☕</div><div><span>ĐI CÀ PHÊ</span><strong id="outdoorAdvice">Đang xem…</strong></div></article>
+        <div class="practical-grid">
+          <article class="practical-card"><div class="practical-icon">↗</div><div><span>XE MÁY</span><strong id="bikeAdvice">Đang xem…</strong><small id="bikeDetail">Đang phân tích cường độ mưa.</small></div></article>
+          <article class="practical-card"><div class="practical-icon">◇</div><div><span>GIÀY TRẮNG</span><strong id="shoeAdvice">Đang xem…</strong><small id="shoeDetail">Đang phân tích mặt đường.</small></div></article>
+          <article class="practical-card"><div class="practical-icon">□</div><div><span>Ô TÔ</span><strong id="carAdvice">Đang xem…</strong><small id="carDetail">Đang phân tích.</small></div></article>
+          <article class="practical-card"><div class="practical-icon">+</div><div><span>ĐI CÀ PHÊ</span><strong id="coffeeAdvice">Đang xem…</strong><small id="coffeeDetail">Đang tìm khung giờ dễ chịu.</small></div></article>
         </div>
       </section>
 
-      <section class="timeline container section-reveal">
-        <div class="section-heading"><div><div class="section-kicker">03 · TIMELINE</div><h2>MƯA LÚC NÀO?</h2></div><div class="timeline-summary" id="timelineSummary">Đang phân tích…</div></div>
-        <div class="rain-timeline" id="rainTimeline"></div>
+      <section class="section timeline-section" id="timeline">
+        <div class="section-heading compact"><div><div class="section-kicker">03 · TIMELINE</div><h2>Mưa lúc nào?</h2></div><p id="timelineSummary">Đang phân tích…</p></div>
+        <div class="timeline-card">
+          <div class="timeline-scale"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+          <div id="timelineBars" class="timeline-bars" aria-label="Lượng mưa theo giờ"></div>
+          <div id="timelinePeak" class="timeline-peak"><span></span><strong>—</strong></div>
+          <div id="timelineLabels" class="timeline-labels"></div>
+        </div>
       </section>
 
-      <section class="radar-section container section-reveal">
-        <div class="section-heading"><div><div class="section-kicker">04 · RADAR</div><h2>MƯA ĐANG Ở ĐÂU?</h2></div><div class="radar-source">RAINVIEWER</div></div>
-        <div class="radar-wrap">
+      <section class="section radar-section" id="radar">
+        <div class="section-heading compact radar-heading">
+          <div><div class="section-kicker">04 · RADAR</div><h2>Mưa đang ở đâu?</h2><p>Vệt mưa thực tế gần nhất do RainViewer cung cấp.</p></div>
+          <a class="source-badge" href="https://www.rainviewer.com/" target="_blank" rel="noreferrer">RAINVIEWER ↗</a>
+        </div>
+        <div class="radar-card">
           <div id="radarMap" class="radar-map" aria-label="Bản đồ radar mưa"></div>
+          <div class="radar-overlay"><span class="radar-live-dot"></span><span id="radarStatus">Đang kết nối radar</span></div>
           <div class="radar-controls">
-            <button id="radarPlay" class="control-btn" type="button">▶ Phát</button>
-            <button id="radarNow" class="control-btn" type="button">Hiện tại</button>
-            <span class="radar-time" id="radarTime">—</span>
-            <div class="radar-legend"><span></span><small>mưa ít</small><span></span><small>mưa mạnh</small></div>
+            <button id="radarPlay" class="control-button" type="button">▶ Phát</button>
+            <button id="radarNow" class="control-button" type="button">Hiện tại</button>
+            <span id="radarTime" class="radar-time">—</span>
+            <div class="radar-legend"><span><i></i> mưa ít</span><span><i></i> mưa mạnh</span></div>
           </div>
         </div>
+        <p class="section-note">Radar hiển thị dữ liệu quan trắc quá khứ gần đây; RainViewer hiện cung cấp các khung radar quá khứ theo chu kỳ 10 phút.</p>
       </section>
 
-      <section class="city-section container section-reveal">
-        <div class="section-heading"><div><div class="section-kicker">05 · CITY VIEW</div><h2>THÀNH PHỐ ĐANG MƯA THẾ NÀO?</h2></div><p id="cityStatus">Đang lấy dữ liệu khu vực…</p></div>
-        <div class="city-grid" id="cityGrid"></div>
+      <section class="section city-section" id="city">
+        <div class="section-heading compact"><div><div class="section-kicker">05 · CITY VIEW</div><h2>Thành phố đang mưa thế nào?</h2></div><p>So sánh nhanh một vài khu vực đại diện. Nếu API không trả dữ liệu, chúng tôi để trống thay vì đoán.</p></div>
+        <div id="cityGrid" class="city-grid"></div>
       </section>
 
-      <section class="engineering container section-reveal">
-        <div class="engineering-intro"><div class="section-kicker">06 · ENGINEERING VIEW</div><h2>GÓC NHÌN KỸ SƯ</h2><p>Một lớp dữ liệu dành cho người thích biết “mưa bao nhiêu thì bắt đầu có chuyện”.</p></div>
-        <div class="engineering-panel">
-          <div class="metric-grid">
-            <div><span>LƯỢNG MƯA</span><strong class="mono" id="engRain">—</strong></div>
-            <div><span>CƯỜNG ĐỘ ĐỈNH</span><strong class="mono" id="engPeak">—</strong></div>
-            <div><span>GIỜ ĐỈNH</span><strong class="mono" id="engHour">—</strong></div>
-            <div><span>RUNOFF POTENTIAL</span><strong id="runoffLevel">—</strong></div>
-          </div>
-          <div class="stress-row"><div><span>DRAINAGE STRESS</span><strong id="stressText">—</strong></div><div class="stress-track"><span id="stressBar"></span></div></div>
-          <button class="details-toggle" id="detailsToggle" type="button">Xem cách tính <span>+</span></button>
-          <div class="details" id="calculationDetails" hidden>
-            <p>Chỉ số này là mô hình tham khảo của website, không phải cảnh báo ngập chính thức.</p>
-            <code>Q ≈ C × I × A</code>
-            <p>Trong đó C là hệ số dòng chảy giả định, I là cường độ mưa và A là diện tích. V2 chỉ dùng mô hình để kể chuyện dữ liệu; không dùng để thiết kế thoát nước thực tế.</p>
-          </div>
+      <section class="section engineering-section" id="engineering">
+        <div class="engineering-header"><div><div class="section-kicker">06 · ENGINEERING VIEW</div><h2>Góc nhìn kỹ sư</h2><p>Một lớp dữ liệu dành cho người thích biết “mưa bao nhiêu thì bắt đầu có chuyện”.</p></div><button id="formulaToggle" class="text-button" type="button">Xem cách tính +</button></div>
+        <div class="engineering-grid">
+          <div class="engineering-metric"><span>LƯỢNG MƯA</span><strong id="engRain">—</strong><small>mm / ngày</small></div>
+          <div class="engineering-metric"><span>CƯỜNG ĐỘ ĐỈNH</span><strong id="engPeak">—</strong><small>mm/h</small></div>
+          <div class="engineering-metric"><span>GIỜ ĐỈNH</span><strong id="engHour">—</strong><small>giờ địa phương</small></div>
+          <div class="engineering-metric wide"><span>RUNOFF POTENTIAL</span><strong id="runoffPotential">—</strong><div class="stress-track"><i id="runoffBar"></i></div></div>
+          <div class="engineering-metric wide"><span>DRAINAGE STRESS</span><strong id="drainageStress">—</strong><div class="stress-track"><i id="drainageBar"></i></div></div>
         </div>
+        <div id="formulaPanel" class="formula-panel" hidden><code>Q ≈ C × I × A</code><p>C là hệ số dòng chảy giả định, I là cường độ mưa và A là diện tích. V2 chỉ dùng mô hình để kể chuyện dữ liệu; không dùng để thiết kế thoát nước thực tế.</p></div>
+        <p class="section-note">Đây là chỉ số tham khảo của website, không phải cảnh báo ngập hoặc thông số thiết kế.</p>
       </section>
 
-      <section class="share-section container section-reveal">
-        <div class="share-card" id="shareCard">
-          <div><span class="share-eyebrow">HÔM NAY CỦA BẠN</span><h2 id="shareTitle">HÔM NAY CÓ MƯA KHÔNG?</h2><p id="shareLine">Một ngày mưa, kể bằng dữ liệu.</p></div>
-          <div class="share-data"><strong id="shareRain">—</strong><span>mm hôm nay</span><strong id="sharePeak">—</strong><span>giờ đỉnh</span></div>
+      <section class="section share-section" id="share">
+        <div class="share-card">
+          <div><div class="section-kicker">07 · SHARE</div><h2>Hôm nay của bạn.</h2><p>Tạo một tấm ảnh nhỏ từ câu chuyện mưa hôm nay.</p></div>
+          <button id="shareButton" class="primary-button" type="button">Tạo ảnh hôm nay ↗</button>
         </div>
-        <button class="primary-btn" id="shareBtn" type="button">Tạo ảnh hôm nay</button>
       </section>
     </main>
 
-    <footer class="footer container">
+    <footer class="footer">
       <div><strong>HÔM NAY CÓ MƯA KHÔNG?</strong><span>Một ngày mưa, kể bằng dữ liệu.</span></div>
-      <div class="footer-meta">Thông tin mang tính tham khảo · Không thay thế cảnh báo thời tiết/ngập chính thức.</div>
+      <div><span>Open-Meteo · RainViewer · OpenStreetMap</span><span>Thông tin mang tính tham khảo · Không thay thế cảnh báo chính thức.</span></div>
     </footer>
   </div>
 
-  <div class="toast" id="toast" role="status"></div>
+  <div id="locationModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-location></div>
+    <div class="location-dialog" role="dialog" aria-modal="true" aria-labelledby="locationTitle">
+      <button class="modal-close" type="button" data-close-location aria-label="Đóng">×</button>
+      <div class="section-kicker">LOCATION</div><h2 id="locationTitle">Chọn thành phố</h2><p>Chọn một vị trí để cập nhật câu chuyện mưa.</p>
+      <div id="locationOptions" class="location-options"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="shareCanvasHost" class="share-canvas-host" aria-hidden="true"></div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script type="module" src="./js/app.js"></script>
+  <script src="./js/weather.js"></script>
+  <script src="./js/rain-story.js"></script>
+  <script src="./js/radar.js"></script>
+  <script src="./js/city-map.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="./js/share-card.js"></script>
+  <script src="./js/app.js"></script>
 </body>
 </html>

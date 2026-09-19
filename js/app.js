@@ -1,47 +1,24 @@
-import {DEFAULT_LOCATION,fetchWeather,weatherIcon,weatherLabel} from './weather.js';
-import {buildRainStory,buildAdvice} from './rain-story.js';
-import {initRadar} from './radar.js';
-import {renderCityGrid} from './city-map.js';
-import {shareToday} from './share-card.js';
-
-const $=id=>document.getElementById(id);
-
-function animateNumber(el,value,suffix='',digits=0){
-  if(!Number.isFinite(value)){el.textContent='—';return}
-  const start=performance.now(),duration=650;
-  function tick(now){const p=Math.min(1,(now-start)/duration),e=1-Math.pow(1-p,3);el.textContent=(value*e).toFixed(digits)+suffix;if(p<1)requestAnimationFrame(tick)}
-  requestAnimationFrame(tick);
-}
-
-function createDrops(){
-  const root=$('rainDrops'); for(let i=0;i<15;i++){const d=document.createElement('span');d.className='drop';d.style.left=`${Math.random()*170}px`;d.style.top=`${Math.random()*25}px`;d.style.animationDelay=`${Math.random()*1.5}s`;root.appendChild(d)}
-}
-function setupReveal(){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')}),{threshold:.08});document.querySelectorAll('.section-reveal').forEach(x=>io.observe(x));}
-function renderTimeline(weather){
-  const root=$('rainTimeline');root.innerHTML='';
-  weather.hourly.forEach((h)=>{const d=document.createElement('div');d.className='hour'+(h.hour===weather.peakHour?' peak':'');d.innerHTML=`<div class="hour-time">${String(h.hour).padStart(2,'0')}h</div><div class="hour-icon">${weatherIcon(h.code)}</div><div class="hour-rain">${h.precipitation.toFixed(1)} mm</div>`;root.appendChild(d)});
-  const peak=weather.peakHour; const text=weather.peakIntensity<1?'Hôm nay không có một đỉnh mưa đáng kể.':`Mưa mạnh nhất quanh ${String(peak).padStart(2,'0')}:00 · ${weather.peakIntensity.toFixed(1)} mm/h.`;$('timelineSummary').textContent=text;
-}
-function render(weather){
-  const story=buildRainStory(weather), advice=buildAdvice(weather), current=weather.current||{};
-  $('heroLocation').textContent=`${weather.location.name.toUpperCase()} · HÔM NAY`;
-  $('heroHeadline').textContent=story.headline;
-  $('heroSubline').textContent=`${weatherLabel(current.weather_code)} · ${Number(current.temperature_2m||0).toFixed(0)}°C · ${Number(current.relative_humidity_2m||0).toFixed(0)}% ẩm`;
-  animateNumber($('totalRain'),weather.totalRain,'',1);animateNumber($('peakIntensity'),weather.peakIntensity,'',1);$('peakHour').textContent=weather.peakHour===null?'—':`${String(weather.peakHour).padStart(2,'0')}:00`;
-  $('heroWeatherIcon').textContent=weatherIcon(current.weather_code);$('heroWeatherText').textContent=weatherLabel(current.weather_code);
-  $('rainPersonality').textContent=story.personality;$('rainDescription').textContent=story.description;$('annoyanceScore').textContent=story.annoyance.toFixed(1);$('scoreBar').style.width=`${story.annoyance*10}%`;$('engineerQuote').textContent=`“${story.engineerComment}”`;
-  $('bikeAdvice').textContent=advice.bike;$('shoeAdvice').textContent=advice.shoe;$('carAdvice').textContent=advice.car;$('outdoorAdvice').textContent=advice.outdoor;
-  $('engRain').textContent=`${weather.totalRain.toFixed(1)} mm`;$('engPeak').textContent=`${weather.peakIntensity.toFixed(1)} mm/h`;$('engHour').textContent=story.peakText||'—';
-  const stress=Math.min(100,weather.totalRain*1.4+weather.peakIntensity*2.4);$('stressBar').style.width=`${stress}%`;$('stressText').textContent=stress>75?'HIGH':stress>45?'MEDIUM':'LOW';$('runoffLevel').textContent=stress>75?'HIGH':stress>45?'MEDIUM':'LOW';
-  $('shareTitle').textContent=story.personality;$('shareLine').textContent=story.headline;$('shareRain').textContent=weather.totalRain.toFixed(1);$('sharePeak').textContent=story.peakText||'—';
-  renderTimeline(weather);
-}
-
-async function main(){
-  createDrops();setupReveal();
-  $('detailsToggle').addEventListener('click',()=>{const d=$('calculationDetails');d.hidden=!d.hidden;$('detailsToggle').querySelector('span').textContent=d.hidden?'+':'−'});
-  $('shareBtn').addEventListener('click',shareToday);
-  try{const weather=await fetchWeather(DEFAULT_LOCATION);render(weather);}catch(err){$('heroHeadline').textContent='Không lấy được dữ liệu thời tiết lúc này.';$('heroSubline').textContent='Bạn có thể thử tải lại trang sau ít phút.';console.error(err)}
-  initRadar();renderCityGrid();
-}
-main();
+(() => {
+  const state={location:RainWeather.locations.hcm,weather:null,story:null};
+  const $=id=>document.getElementById(id);
+  const fmt=(n,d=1)=>Number.isFinite(Number(n))?Number(n).toFixed(d):'—';
+  const hourLabel=t=>t?new Intl.DateTimeFormat('vi-VN',{hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(t)):'—';
+  const dateLabel=()=>new Intl.DateTimeFormat('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date()).replaceAll('/',' / ');
+  function set(id,value){if($(id))$(id).textContent=value}
+  function setAdvice(prefix,pair){set(prefix+'Advice',pair[0]);set(prefix+'Detail',pair[1])}
+  function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2600)}
+  function render(w){state.weather=w; state.story=RainStory.build(w); const s=state.story; const e=RainStory.engineering(w);
+    set('locationLabel',w.location.name);set('heroLocation',w.location.label);set('heroDate',`HÔM NAY · ${dateLabel()}`);set('totalRain',fmt(w.total));set('peakIntensity',fmt(w.peakIntensity));set('peakHour',hourLabel(w.peakHour));set('heroTemperature',w.current?.temp!=null?`${Math.round(w.current.temp)}°`:'—°');set('heroCondition',condition(w.current?.code));
+    set('storyTitle',s.personality);set('storySubtitle',s.subtitle);set('storyQuote',s.quote);set('annoyanceScore',fmt(s.annoyance,1));
+    setAdvice('bike',s.bike);setAdvice('shoe',s.shoe);setAdvice('car',s.car);setAdvice('coffee',s.coffee);
+    set('engRain',fmt(w.total));set('engPeak',fmt(w.peakIntensity));set('engHour',hourLabel(w.peakHour));set('runoffPotential',e.runoffLabel);set('drainageStress',e.drainageLabel);$('runoffBar').style.width=`${e.runoff}%`;$('drainageBar').style.width=`${e.drainage}%`;
+    renderTimeline(w); $('heroIntro').textContent=s.subtitle;
+  }
+  function condition(code){if(code==null)return'ĐANG ĐỌC NHỊP MƯA'; if(code===0)return'BẦU TRỜI QUANG';if([1,2,3].includes(code))return'NHIỀU MÂY';if([45,48].includes(code))return'SƯƠNG MÙ';if(code>=51&&code<=67)return'ĐANG CÓ MƯA';if(code>=80&&code<=82)return'MƯA RÀO';if(code>=95)return'DÔNG';return'ĐANG THEO DÕI'}
+  function renderTimeline(w){const bars=$('timelineBars'),labels=$('timelineLabels');bars.innerHTML='';labels.innerHTML=''; const vals=w.rows.map(r=>Number(r.precip)||0);const max=Math.max(1,...vals);w.rows.forEach((r,i)=>{const b=document.createElement('div');b.className='timeline-bar';b.style.height=`${Math.max(3,(r.precip/max)*100)}%`;b.title=`${hourLabel(r.time)} · ${fmt(r.precip)} mm`;bars.appendChild(b);if(i%4===0){const s=document.createElement('span');s.textContent=hourLabel(r.time).slice(0,2);labels.appendChild(s)}});const peakIndex=Math.max(0,vals.indexOf(max));const left=vals.length?((peakIndex+.5)/vals.length)*100:50;$('timelinePeak').style.left=`${left}%`;$('timelinePeak').querySelector('strong').textContent=hourLabel(w.peakHour);const rainHours=w.rows.filter(r=>r.precip>0.1);set('timelineSummary',rainHours.length?`Mưa xuất hiện khoảng ${rainHours.length} giờ trong ngày.`:'Chưa thấy lượng mưa đáng kể trong dự báo hôm nay.');}
+  async function load(){try{const w=await RainWeather.fetchWeather(state.location);render(w);const city=await RainWeather.fetchCityRain(CityView.districts);CityView.render(city)}catch(err){console.error(err);toast('Không lấy được dữ liệu thời tiết. Thử tải lại trang.');CityView.render(CityView.districts.map(x=>({...x,rain:NaN,peak:NaN,prob:NaN})))} }
+  function setupLocation(){const modal=$('locationModal'),options=$('locationOptions');Object.entries(RainWeather.locations).forEach(([key,x])=>{const b=document.createElement('button');b.className='location-option';b.innerHTML=`<strong>${x.name}</strong><span>${x.label}</span>`;b.onclick=()=>{state.location=x;modal.hidden=true;load();document.querySelector('.hero').scrollIntoView({behavior:'smooth'})};options.appendChild(b)});$('locationButton').onclick=()=>modal.hidden=false;document.querySelectorAll('[data-close-location]').forEach(x=>x.onclick=()=>modal.hidden=true)}
+  function setup(){setupLocation();$('formulaToggle').onclick=()=>{const p=$('formulaPanel');p.hidden=!p.hidden;$('formulaToggle').textContent=p.hidden?'Xem cách tính +':'Thu gọn −'};$('radarPlay').onclick=()=>RainRadar.play();$('radarNow').onclick=()=>RainRadar.now();document.addEventListener('radar:time',e=>{const d=new Date(e.detail.time*1000);set('radarTime',new Intl.DateTimeFormat('vi-VN',{hour:'2-digit',minute:'2-digit'}).format(d));set('radarStatus',`Radar · ${e.detail.index+1}/${e.detail.total}`)});$('shareButton').onclick=async()=>{if(!state.weather)return;const ok=await ShareCard.create({location:state.location.name,personality:state.story.personality,subtitle:state.story.subtitle,total:fmt(state.weather.total),peakHour:hourLabel(state.weather.peakHour),quote:state.story.quote});if(!ok)toast('Trình duyệt chưa hỗ trợ tạo ảnh tự động.');else toast('Đã tạo ảnh hôm nay.');};}
+  async function boot(){setup();load();try{await RainRadar.init($('radarMap'),state.location.lat,state.location.lon)}catch(err){console.error(err);set('radarStatus','Radar tạm thời không khả dụng');toast('Không tải được radar. Bản đồ nền vẫn hoạt động.')}}
+  document.addEventListener('DOMContentLoaded',boot);
+})();

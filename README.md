@@ -1,27 +1,27 @@
-# Hôm Nay Có Mưa Không? — V2
+# Hôm Nay Có Mưa Không? — Final V2
 
-Static website, deploy trực tiếp từ GitHub sang Vercel.
+Static website, deploy trực tiếp bằng GitHub → Vercel.
 
-## Chạy local
+## Cấu trúc
+- `index.html` — layout và semantic sections
+- `css/style.css` — visual system, responsive, Leaflet tile fix, animation
+- `js/weather.js` — Open-Meteo weather/forecast
+- `js/rain-story.js` — Rain Personality + practical/engineering interpretation
+- `js/radar.js` — RainViewer past radar frames + Leaflet
+- `js/city-map.js` — multi-location city rainfall cards
+- `js/share-card.js` — share image generator
+- `js/app.js` — application orchestration
 
-Không cần build step. Có thể mở bằng một static server vì ES Modules không nên chạy bằng `file://`.
+## Deploy
+1. Upload/replace these files in the existing GitHub repository.
+2. Commit changes to the production branch (normally `main`).
+3. Vercel will automatically build/deploy the new commit when the repository is connected.
+4. No build command, Node server, database, or environment variable is required.
 
-Ví dụ:
-
-```bash
-python -m http.server 8080
-```
-
-Sau đó mở `http://localhost:8080`.
-
-## Nguồn dữ liệu
-
+## Data sources
 - Weather/forecast: Open-Meteo
-- Radar: RainViewer
-- Map tiles: OpenStreetMap + Leaflet
+- Radar: RainViewer Weather Maps API (past radar frames)
+- Basemap: OpenStreetMap
 
-## Deploy Vercel
-
-Kết nối repository GitHub với Vercel. Mỗi lần commit/push lên branch production, Vercel sẽ tự deploy lại.
-
-Không cần backend cho phiên bản hiện tại.
+## Important
+RainViewer's public API currently exposes past radar maps; this build does not pretend to provide a future radar forecast. District values are real Open-Meteo responses; missing data is displayed as `—` rather than generated randomly.
