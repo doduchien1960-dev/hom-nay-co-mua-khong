@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hôm Nay Có Mưa Không — Giả Lập Thủy Lực & Bản Tin Thoát Nước</title>
-  <meta name="description" content="Bản tin thời tiết châm biếm và giả lập ngập úng đô thị chuẩn dân kỹ thuật hạ tầng." />
+  <title>Hôm Nay Có Mưa Không — Telemetry & Hydraulic Simulator</title>
+  <meta name="description" content="Trạm giám sát thoát nước đô thị và thời tiết hạ tầng thời gian thực." />
 
-  <!-- Google Fonts: JetBrains Mono & Inter -->
+  <!-- Fonts: Space Grotesk & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -20,18 +20,19 @@
         extend: {
           fontFamily: {
             mono: ['"JetBrains Mono"', 'monospace'],
-            sans: ['Inter', 'sans-serif'],
+            sans: ['"Space Grotesk"', 'sans-serif'],
           },
           colors: {
-            cad: {
-              bg: '#0B0F17',
-              surface: '#111726',
-              border: '#1E293B',
-              grid: '#162032',
-              cyan: '#00F0FF',
-              amber: '#FFB800',
-              red: '#FF3366',
-              green: '#00FF66',
+            telemetry: {
+              bg: '#070A0F',
+              panel: '#0D131F',
+              panelBorder: '#1A2333',
+              subtle: '#223047',
+              cyan: '#00F2FE',
+              amber: '#F59E0B',
+              rose: '#F43F5E',
+              emerald: '#10B981',
+              blue: '#38BDF8'
             }
           }
         }
@@ -39,63 +40,82 @@
     }
   </script>
 
-  <!-- Thư viện chụp ảnh bản vẽ html2canvas -->
+  <!-- Thư viện chụp ảnh html2canvas -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
-    /* Lưới tọa độ CAD Background */
-    .cad-grid {
-      background-size: 24px 24px;
+    /* Lưới kỹ thuật SCADA sắc nét */
+    .scada-grid {
+      background-size: 32px 32px;
       background-image: 
-        linear-gradient(to right, rgba(30, 41, 59, 0.4) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(30, 41, 59, 0.4) 1px, transparent 1px);
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
     }
-
-    /* Hiệu ứng gợn sóng nước trong cống */
+    
+    /* Gợn sóng nước SVG */
     @keyframes waveFlow {
       0% { transform: translateX(0); }
       100% { transform: translateX(-50%); }
     }
-    .water-wave {
-      animation: waveFlow 4s linear infinite;
+    .flow-wave {
+      animation: waveFlow 2s linear infinite;
     }
 
-    /* Con dấu đỏ công trường */
-    .blueprint-stamp {
-      border: 3px double #FF3366;
-      color: #FF3366;
-      transform: rotate(-6deg);
-      box-shadow: 0 0 15px rgba(255, 51, 102, 0.2);
+    /* Đèn LED nhấp nháy báo trạng thái */
+    @keyframes blinkLed {
+      0%, 100% { opacity: 1; filter: drop-shadow(0 0 6px #00F2FE); }
+      50% { opacity: 0.3; filter: none; }
+    }
+    .led-live {
+      animation: blinkLed 1.8s infinite;
     }
 
-    /* Con trỏ chuột kỹ thuật */
-    body {
-      cursor: crosshair;
+    /* Thanh cuộn ngang mượt */
+    ::-webkit-scrollbar {
+      height: 4px;
+      width: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0D131F;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #223047;
+      border-radius: 2px;
     }
   </style>
 </head>
 
-<body class="bg-cad-bg text-slate-200 font-sans cad-grid min-h-screen flex flex-col justify-between selection:bg-cad-cyan selection:text-black">
+<body class="bg-telemetry-bg text-slate-200 font-mono scada-grid min-h-screen flex flex-col justify-between selection:bg-telemetry-cyan selection:text-black">
 
-  <!-- TOP HEADER / STATUS HUD -->
-  <header class="border-b border-cad-border bg-cad-bg/90 backdrop-blur sticky top-0 z-50 px-4 py-2.5">
-    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 font-mono text-xs">
+  <!-- TOP BAR / SCADA TELEMETRY HUD -->
+  <header class="border-b border-telemetry-panelBorder bg-telemetry-bg/95 backdrop-blur sticky top-0 z-50 px-4 py-2">
+    <div class="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
       
-      <!-- Brand & Project Code -->
+      <!-- System Brand -->
       <div class="flex items-center gap-3">
-        <div class="w-3 h-3 bg-cad-cyan rounded-none animate-pulse"></div>
+        <div class="w-2.5 h-2.5 bg-telemetry-cyan rounded-full led-live"></div>
         <div>
-          <span class="font-bold tracking-wider text-cad-cyan text-sm sm:text-base">HÔM NAY CÓ MƯA KHÔNG?</span>
-          <span class="text-slate-500 hidden sm:inline ml-2">| SYS_VER: 2026.1_PROD</span>
+          <span class="font-sans font-bold tracking-wider text-white text-sm sm:text-base">HÔM NAY CÓ MƯA KHÔNG?</span>
+          <span class="text-slate-500 text-[11px] ml-2 hidden md:inline">| HYDRAULIC & SCADA TELEMETRY ENGINE</span>
         </div>
       </div>
 
-      <!-- City Selector & Tools -->
-      <div class="flex items-center gap-2 sm:gap-4 ml-auto">
-        <!-- City Select -->
-        <div class="flex items-center gap-1.5 bg-cad-surface border border-cad-border px-2.5 py-1">
-          <span class="text-slate-400">LOC:</span>
-          <select id="citySelect" class="bg-transparent text-cad-cyan font-bold outline-none cursor-pointer">
+      <!-- Center Status: Sensor Latency -->
+      <div class="hidden lg:flex items-center gap-4 text-[11px] text-slate-400">
+        <span class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-telemetry-emerald"></span>
+          STATION: OPEN-METEO TELEMETRY
+        </span>
+        <span>LAT: <strong id="hudLat" class="text-white">10.82</strong></span>
+        <span>LON: <strong id="hudLon" class="text-white">106.63</strong></span>
+        <span id="sysClock" class="text-telemetry-cyan">00:00:00 UTC+7</span>
+      </div>
+
+      <!-- Right Controls -->
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1 bg-telemetry-panel border border-telemetry-panelBorder px-2 py-1">
+          <span class="text-slate-400 text-[11px]">KHU VỰC:</span>
+          <select id="citySelect" class="bg-transparent text-telemetry-cyan font-bold outline-none cursor-pointer text-xs">
             <option value="hcm" selected class="bg-slate-900">TP. Hồ Chí Minh</option>
             <option value="hanoi" class="bg-slate-900">Hà Nội</option>
             <option value="danang" class="bg-slate-900">Đà Nẵng</option>
@@ -105,284 +125,300 @@
           </select>
         </div>
 
-        <!-- Sound Toggle -->
-        <button id="soundToggle" class="px-2 py-1 border border-cad-border bg-cad-surface hover:border-cad-cyan text-slate-400 hover:text-cad-cyan transition-colors" title="Bật/Tắt âm thanh cơ học">
-          <span id="soundStatus">🔊 SFX ON</span>
+        <button id="soundToggle" class="px-2.5 py-1 border border-telemetry-panelBorder bg-telemetry-panel hover:border-telemetry-cyan text-slate-300 text-xs transition-colors">
+          <span id="soundLabel">🔊 SFX ON</span>
         </button>
-
-        <!-- Live Coord HUD -->
-        <div id="mouseCoords" class="text-slate-500 hidden lg:block tabular-nums">
-          X: 106.66 Y: 10.82
-        </div>
       </div>
 
     </div>
   </header>
 
-  <!-- MAIN VIEWPORT -->
-  <main class="max-w-7xl mx-auto px-4 py-6 w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-grow">
+  <!-- MAIN SCADA DASHBOARD (BENTO-GRID LAYOUT) -->
+  <main class="max-w-[1440px] mx-auto px-3 sm:px-4 py-4 w-full grid grid-cols-1 lg:grid-cols-12 gap-4 items-start flex-grow">
 
-    <!-- CỘT TRÁI: PHIẾU BÁO CÁO KỸ THUẬT (XUẤT RA ẢNH ĐƯỢC) -->
-    <section class="lg:col-span-5 flex flex-col gap-4">
+    <!-- CỘT TRÁI (5 COLS): THẺ BẢN VẼ BLUEPRINT & CHẤT LƯỢNG KHÔNG KHÍ (AQI) -->
+    <div class="lg:col-span-5 flex flex-col gap-4">
       
-      <!-- Thẻ Card Blueprint được export ảnh -->
-      <div id="exportableCard" class="bg-cad-surface border-2 border-cad-border p-5 relative overflow-hidden flex flex-col gap-4 shadow-2xl">
+      <!-- PHIẾU BÁO CÁO CÔNG SỰ (EXPORT SANG ẢNH PNG) -->
+      <div id="exportableCard" class="bg-telemetry-panel border border-telemetry-panelBorder p-4 sm:p-5 relative shadow-2xl flex flex-col gap-3.5">
         
-        <!-- Khung định vị góc CAD (L-Markers) -->
-        <div class="absolute top-1 left-1 text-[9px] font-mono text-slate-600 select-none">+0.00</div>
-        <div class="absolute top-1 right-1 text-[9px] font-mono text-slate-600 select-none">WP_01</div>
-        <div class="absolute bottom-1 left-1 text-[9px] font-mono text-slate-600 select-none">SCALE 1:1</div>
-        <div class="absolute bottom-1 right-1 text-[9px] font-mono text-slate-600 select-none">SEC_A-A</div>
+        <!-- Khung viền kỹ thuật góc -->
+        <div class="absolute top-1 left-1 text-[8px] text-slate-600 select-none">+0.00 M</div>
+        <div class="absolute top-1 right-1 text-[8px] text-slate-600 select-none">DWG_REF: 2026-FL</div>
+        <div class="absolute bottom-1 left-1 text-[8px] text-slate-600 select-none">TCVN: 7957-2008</div>
+        <div class="absolute bottom-1 right-1 text-[8px] text-slate-600 select-none">SEC_A1</div>
 
-        <!-- Header Card: Địa Điểm & Ngày -->
-        <div class="border-b border-cad-border pb-3 flex justify-between items-start">
+        <!-- Header Card -->
+        <div class="border-b border-telemetry-subtle pb-2.5 flex justify-between items-start">
           <div>
-            <div class="text-[10px] font-mono tracking-widest text-slate-400 uppercase">HỆ THỐNG TIÊU THOÁT NƯỚC ĐÔ THỊ</div>
-            <h1 id="cardLocationTitle" class="text-xl font-bold font-mono text-white mt-0.5">TP. HỒ CHÍ MINH</h1>
-            <div id="cardDate" class="text-xs font-mono text-cad-cyan">20/09/2026 — DỮ LIỆU THỰC TẾ</div>
+            <div class="text-[10px] tracking-widest text-slate-400 uppercase">HỆ THỐNG GIÁM SÁT TIÊU THOÁT NƯỚC</div>
+            <h1 id="cardLocationTitle" class="text-xl sm:text-2xl font-sans font-bold text-white mt-0.5 tracking-tight">TP. HỒ CHÍ MINH</h1>
+            <div id="cardDate" class="text-xs text-telemetry-cyan font-mono">20/09/2026 — DỮ LIỆU ĐO ĐẠC THỰC</div>
           </div>
-          <!-- Con dấu đỏ châm biếm -->
-          <div id="cardStamp" class="blueprint-stamp px-2 py-1 text-[10px] font-mono font-black uppercase text-center select-none">
+          <!-- Con dấu đỏ công trường -->
+          <div id="cardStamp" class="border-2 border-dashed px-2 py-1 text-[11px] font-black uppercase text-center rotate-[-4deg] select-none tracking-wider">
             THIẾT KẾ ĐẦU HÀNG
           </div>
         </div>
 
-        <!-- Tên Cơn Mưa Trong Ngày (Character) -->
-        <div class="bg-cad-bg/70 border border-cad-border p-3">
-          <div class="text-[10px] font-mono text-slate-400 mb-1">ĐỊNH DANH CƠN MƯA (RAIN CHARACTER):</div>
-          <div id="rainCharacterName" class="text-base sm:text-lg font-black font-mono text-cad-amber">
+        <!-- Tên Cơn Mưa Trong Ngày (Rain Character) -->
+        <div class="bg-telemetry-bg/90 border-l-2 border-telemetry-amber p-3">
+          <div class="text-[9px] text-slate-400 uppercase tracking-wider">ĐỊNH DANH CƠN MƯA (RAIN CHARACTER):</div>
+          <div id="rainCharacterName" class="text-base sm:text-lg font-sans font-bold text-telemetry-amber mt-0.5">
             "CƠN MƯA VƯỢT QUÁ DESIGN CRITERIA"
           </div>
         </div>
 
-        <!-- Rain Score Gauge -->
-        <div>
-          <div class="flex justify-between items-baseline font-mono text-xs mb-1.5">
-            <span class="text-slate-400">RAIN RISK SCORE:</span>
-            <span id="rainScoreText" class="text-lg font-extrabold text-cad-cyan">78 / 100</span>
+        <!-- Rain Risk Score HUD -->
+        <div class="bg-telemetry-bg/60 p-3 border border-telemetry-subtle">
+          <div class="flex justify-between items-baseline text-xs mb-1.5">
+            <span class="text-slate-400 uppercase">CHỈ SỐ RỦI RO NGẬP ÚNG:</span>
+            <span id="rainScoreText" class="text-xl font-bold text-telemetry-cyan tracking-wider">78 / 100</span>
           </div>
-          <div class="w-full bg-slate-800 h-3 border border-cad-border p-0.5">
-            <div id="rainScoreBar" class="bg-cad-cyan h-full transition-all duration-700" style="width: 78%;"></div>
+          <div class="w-full bg-slate-900 h-2 border border-telemetry-panelBorder overflow-hidden">
+            <div id="rainScoreBar" class="bg-telemetry-cyan h-full transition-all duration-500" style="width: 78%;"></div>
           </div>
-          <div id="rainScoreSub" class="text-[11px] font-mono text-slate-400 mt-1 flex justify-between">
-            <span>0: Mưa cho vui</span>
-            <span class="text-cad-amber">50: Bắt đầu lo</span>
-            <span class="text-cad-red">100: Thành sông</span>
-          </div>
-        </div>
-
-        <!-- Thống Kê Đo Đạc Mưa Thực Tế -->
-        <div class="grid grid-cols-2 gap-2 font-mono text-xs">
-          <div class="bg-cad-bg/50 border border-cad-border p-2.5">
-            <div class="text-slate-500 text-[10px]">TỔNG LƯỢNG MƯA 24H:</div>
-            <div id="valPrecipSum" class="text-base font-bold text-white mt-0.5">72.4 mm</div>
-            <div class="text-[10px] text-slate-400">Chu kỳ lặp: ~5 năm</div>
-          </div>
-          <div class="bg-cad-bg/50 border border-cad-border p-2.5">
-            <div class="text-slate-500 text-[10px]">CƯỜNG ĐỘ ĐỈNH (I_MAX):</div>
-            <div id="valIntensityMax" class="text-base font-bold text-cad-amber mt-0.5">38.0 mm/h</div>
-            <div id="valPeakHour" class="text-[10px] text-slate-400">Khung giờ: 16:30 - 18:30</div>
+          <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+            <span>0: Khô ráo</span>
+            <span>50: Mấp mé vỉa hè</span>
+            <span class="text-telemetry-rose">100: Sông Đô Thị</span>
           </div>
         </div>
 
-        <!-- Thước Đo Khả Năng Thiệt Hại Dân Gian -->
-        <div class="border border-cad-border p-3 bg-cad-bg/40 font-mono text-xs">
-          <div class="text-[10px] text-slate-400 mb-2 font-bold uppercase tracking-wider">CHỈ SỐ THIỆT HẠI ĐỐI TƯỢNG (DAMAGE RISK):</div>
-          <div class="space-y-2">
-            <div class="flex justify-between items-center">
-              <span>🛵 Xe máy / Xe tay ga:</span>
-              <span id="riskBike" class="font-bold text-cad-red">🔴 Liếm mép pô xe</span>
+        <!-- Số liệu đo đạc lượng mưa & cường độ -->
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-telemetry-bg/80 border border-telemetry-panelBorder p-2.5">
+            <div class="text-[10px] text-slate-500">TỔNG LƯỢNG MƯA 24H:</div>
+            <div id="valPrecipSum" class="text-lg font-bold text-white mt-0.5">72.4 mm</div>
+            <div class="text-[10px] text-slate-400">Chu kỳ lặp P = 5 năm</div>
+          </div>
+          <div class="bg-telemetry-bg/80 border border-telemetry-panelBorder p-2.5">
+            <div class="text-[10px] text-slate-500">CƯỜNG ĐỘ ĐỈNH (I_MAX):</div>
+            <div id="valIntensityMax" class="text-lg font-bold text-telemetry-amber mt-0.5">38.0 mm/h</div>
+            <div id="valPeakHour" class="text-[10px] text-telemetry-cyan">Đỉnh lúc: 17:00</div>
+          </div>
+        </div>
+
+        <!-- Thước đo thiệt hại theo phương tiện -->
+        <div class="border border-telemetry-subtle p-3 bg-telemetry-bg/40 text-xs">
+          <div class="text-[10px] text-slate-400 mb-2 uppercase font-bold tracking-wider">RỦI RO THỰC TẾ TRÊN ĐƯỜNG:</div>
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center py-0.5 border-b border-slate-800">
+              <span class="text-slate-300">🛵 Xe máy / Tay ga:</span>
+              <span id="riskBike" class="font-bold text-telemetry-rose">🔴 Liếm mép pô xe</span>
             </div>
-            <div class="flex justify-between items-center">
-              <span>👟 Giày trắng văn phòng:</span>
-              <span id="riskShoes" class="font-bold text-cad-red">💀 Đổi sang tổ ong</span>
+            <div class="flex justify-between items-center py-0.5 border-b border-slate-800">
+              <span class="text-slate-300">👟 Giày trắng văn phòng:</span>
+              <span id="riskShoes" class="font-bold text-telemetry-rose">💀 Đổi sang dép tổ ong</span>
             </div>
-            <div class="flex justify-between items-center">
-              <span>🚗 Ô tô gầm thấp:</span>
-              <span id="riskCar" class="font-bold text-cad-amber">🟡 Thủy kích rình rập</span>
+            <div class="flex justify-between items-center py-0.5">
+              <span class="text-slate-300">🚗 Ô tô gầm thấp:</span>
+              <span id="riskCar" class="font-bold text-telemetry-amber">🟡 Nguy cơ thủy kích</span>
             </div>
           </div>
         </div>
 
-        <!-- Lời Phán Của Kỹ Sư Công Trường -->
-        <div class="border-t border-dashed border-cad-border pt-3">
-          <div class="text-[10px] font-mono text-cad-cyan mb-1 flex items-center gap-1.5">
-            <span>👷 LỜI PHÁN CỦA KỸ SƯ THOÁT NƯỚC:</span>
-          </div>
-          <p id="engineerQuote" class="text-xs italic text-slate-300 bg-cad-bg/80 p-2.5 border-l-2 border-cad-cyan">
-            "Về mặt lý thuyết, cống D1000 vẫn đáp ứng lưu lượng đỉnh nếu hệ số dòng chảy C=0.7. Nhưng thực tế hố ga đang bị chặn bởi 3 bao rác và 1 tấm ván trượt dắt xe."
+        <!-- Lời phán châm biếm của Kỹ sư -->
+        <div class="bg-telemetry-bg/95 p-3 border-l-2 border-telemetry-cyan text-xs">
+          <div class="text-[9px] text-telemetry-cyan font-bold uppercase mb-1">👷 NHẬN ĐỊNH CỦA KỸ SƯ TRỰC CA:</div>
+          <p id="engineerQuote" class="italic text-slate-300 leading-relaxed">
+            "Về mặt tính toán thủy lực, cống D1200 thừa sức tiêu thoát với $q = 1.4\text{ m}^3/\text{s}$. Tuy nhiên cửa thu đang bị chặn đứng bởi bịch rác sinh hoạt và rào chắn tạm thời."
           </p>
         </div>
 
-        <!-- Title Block Cuối Bản Vẽ -->
-        <div class="border-t border-cad-border pt-2 text-[9px] font-mono text-slate-500 flex justify-between">
-          <span>PROJECT: RAIN_VERDICT</span>
-          <span>DISCIPLINE: DRAINAGE</span>
-          <span>STATUS: FOR TROLL ONLY</span>
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="flex gap-2">
+        <button id="btnExport" class="flex-1 bg-telemetry-cyan hover:bg-cyan-300 text-slate-950 font-bold text-xs py-2.5 px-4 flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          XUẤT PHIẾU BẢN VẼ (PNG)
+        </button>
+        <button id="btnShare" class="border border-telemetry-panelBorder bg-telemetry-panel hover:border-telemetry-cyan text-slate-300 text-xs py-2.5 px-4 flex items-center justify-center gap-1.5 transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+          CHIA SẺ
+        </button>
+      </div>
+
+      <!-- WIDGET 1: CHẤT LƯỢNG KHÔNG KHÍ (AQI & BỤI MỊN PM2.5) -->
+      <div class="bg-telemetry-panel border border-telemetry-panelBorder p-3.5">
+        <div class="flex justify-between items-center mb-2 text-xs">
+          <span class="text-white font-bold flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-telemetry-emerald"></span>
+            CHẤT LƯỢNG KHÔNG KHÍ (AIR QUALITY)
+          </span>
+          <span id="aqiBadge" class="px-2 py-0.5 text-[10px] font-bold bg-telemetry-emerald/20 text-telemetry-emerald border border-telemetry-emerald/40">
+            TỐT (AQI 42)
+          </span>
         </div>
 
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="flex gap-3">
-        <button id="btnExport" class="flex-1 bg-cad-cyan hover:bg-cyan-300 text-slate-950 font-mono font-bold text-xs py-2.5 px-4 flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          TẢI PHIẾU BẢN VẼ (PNG)
-        </button>
-        <button id="btnShare" class="border border-cad-border bg-cad-surface hover:border-cad-cyan text-slate-300 hover:text-white font-mono text-xs py-2.5 px-4 flex items-center justify-center gap-1.5 transition-all">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-          SHARE LINK
-        </button>
-      </div>
-
-    </section>
-
-    <!-- CỘT PHẢI: MẶT CẮT THỦY LỰC ĐỘNG & ĐIỀU KHIỂN KỸ THUẬT -->
-    <section class="lg:col-span-7 flex flex-col gap-6">
-
-      <!-- MÔ PHỎNG MẶT CẮT THỦY LỰC (SVG DYNAMIC SECTION) -->
-      <div class="bg-cad-surface border border-cad-border p-4 relative">
-        <div class="flex justify-between items-center mb-2 font-mono text-xs">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-cad-green animate-ping"></span>
-            <span class="font-bold text-white uppercase tracking-wider">MẶT CẮT THỦY LỰC HỐ GA & CỐNG THOÁT NƯỚC (SECTION A-A)</span>
+        <div class="grid grid-cols-3 gap-2 text-center text-xs mt-2">
+          <div class="bg-telemetry-bg p-2 border border-telemetry-subtle">
+            <div class="text-[9px] text-slate-400">CHỈ SỐ AQI (US)</div>
+            <div id="aqiVal" class="text-base font-bold text-telemetry-emerald mt-0.5">42</div>
           </div>
-          <span id="pipeStatusLabel" class="text-cad-cyan font-bold">CHẢY CÓ ÁP (78% CAPACITY)</span>
+          <div class="bg-telemetry-bg p-2 border border-telemetry-subtle">
+            <div class="text-[9px] text-slate-400">BỤI PM2.5</div>
+            <div id="pm25Val" class="text-base font-bold text-white mt-0.5">10.2 <span class="text-[9px] font-normal text-slate-500">µg/m³</span></div>
+          </div>
+          <div class="bg-telemetry-bg p-2 border border-telemetry-subtle">
+            <div class="text-[9px] text-slate-400">RỬA TRÔI BỤI</div>
+            <div id="airWashStatus" class="text-xs font-bold text-telemetry-cyan mt-1">Đang làm sạch</div>
+          </div>
+        </div>
+
+        <div id="airQualityHumor" class="mt-2 text-[11px] text-slate-400 italic">
+          "Cơn mưa cuốn sạch bụi mịn PM2.5, bầu không khí trong lành như trên công trường ngày nghiệm thu bàn giao."
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CỘT PHẢI (7 COLS): MẶT CẮT THỦY LỰC ĐỘNG TỨC THỜI & TIMELINE 24H -->
+    <div class="lg:col-span-7 flex flex-col gap-4">
+
+      <!-- MẶT CẮT THỦY LỰC ĐỘNG TỨC THỜI (DYNAMIC SVG CROSS-SECTION) -->
+      <div class="bg-telemetry-panel border border-telemetry-panelBorder p-4 relative">
+        <div class="flex flex-wrap justify-between items-center gap-2 mb-2 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-telemetry-cyan led-live"></span>
+            <span class="font-bold text-white uppercase tracking-wider">MẶT CẮT THỦY LỰC HỐ GA & CỐNG D1200 (SECTION A-A)</span>
+          </div>
+          <div id="pipeStatusBadge" class="px-2 py-0.5 bg-telemetry-cyan/20 border border-telemetry-cyan text-telemetry-cyan font-bold text-[11px]">
+            CHẢY TỰ DO ỔN ĐỊNH
+          </div>
         </div>
 
         <!-- Khung vẽ SVG Kỹ Thuật -->
-        <div class="w-full bg-[#070A10] border border-cad-border relative overflow-hidden rounded">
+        <div class="w-full bg-[#05080E] border border-telemetry-panelBorder relative overflow-hidden rounded">
           <svg viewBox="0 0 600 320" class="w-full h-auto select-none font-mono">
             <defs>
               <!-- Hoa văn Bê tông mặt đường -->
               <pattern id="concreteHatch" width="12" height="12" patternUnits="userSpaceOnUse">
-                <path d="M0 12 L12 0 M6 12 L12 6 M0 6 L6 0" stroke="#1E293B" stroke-width="1"/>
+                <path d="M0 12 L12 0 M6 12 L12 6 M0 6 L6 0" stroke="#1A2333" stroke-width="1"/>
               </pattern>
-              <!-- Pattern nước -->
+              <!-- Gradient nước chuyển màu thủy lực -->
               <linearGradient id="waterGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#00F0FF" stop-opacity="0.8"/>
-                <stop offset="100%" stop-color="#0066CC" stop-opacity="0.95"/>
+                <stop offset="0%" stop-color="#00F2FE" stop-opacity="0.9"/>
+                <stop offset="100%" stop-color="#0284C7" stop-opacity="0.95"/>
               </linearGradient>
             </defs>
 
-            <!-- Lưới nền mờ trong khung vẽ -->
-            <g stroke="#121824" stroke-width="1">
-              <line x1="0" y1="80" x2="600" y2="80"/>
-              <line x1="0" y1="160" x2="600" y2="160"/>
-              <line x1="0" y1="240" x2="600" y2="240"/>
-              <line x1="150" y1="0" x2="150" y2="320"/>
+            <!-- Lưới nền mờ CAD -->
+            <g stroke="#0E1626" stroke-width="1">
+              <line x1="0" y1="50" x2="600" y2="50"/>
+              <line x1="0" y1="120" x2="600" y2="120"/>
+              <line x1="0" y1="200" x2="600" y2="200"/>
+              <line x1="0" y1="272" x2="600" y2="272"/>
+              <line x1="160" y1="0" x2="160" y2="320"/>
               <line x1="300" y1="0" x2="300" y2="320"/>
-              <line x1="450" y1="0" x2="450" y2="320"/>
+              <line x1="440" y1="0" x2="440" y2="320"/>
             </g>
 
             <!-- Kết cấu đất & vỉa hè hai bên -->
-            <rect x="0" y="40" width="220" height="280" fill="url(#concreteHatch)" opacity="0.4" />
-            <rect x="380" y="40" width="220" height="280" fill="url(#concreteHatch)" opacity="0.4" />
+            <rect x="0" y="45" width="220" height="275" fill="url(#concreteHatch)" />
+            <rect x="380" y="45" width="220" height="275" fill="url(#concreteHatch)" />
 
             <!-- Mặt đường & Bó vỉa dốc i=2% -->
-            <!-- Vỉa hè trái -->
-            <path d="M0,35 L120,35 L120,50 L220,55" fill="none" stroke="#64748B" stroke-width="3" />
-            <text x="30" y="28" fill="#64748B" font-size="9">VỈA HÈ TRAI</text>
+            <path d="M0,40 L140,40 L140,55 L220,60" fill="none" stroke="#64748B" stroke-width="2.5" />
+            <text x="30" y="32" fill="#64748B" font-size="9">VỈA HÈ TRÁI (+0.15m)</text>
             
-            <!-- Mặt đường phải -->
-            <path d="M380,55 L480,50 L480,35 L600,35" fill="none" stroke="#64748B" stroke-width="3" />
-            <text x="500" y="28" fill="#64748B" font-size="9">VỈA HÈ PHẢI</text>
+            <path d="M380,60 L460,55 L460,40 L600,40" fill="none" stroke="#64748B" stroke-width="2.5" />
+            <text x="490" y="32" fill="#64748B" font-size="9">VỈA HÈ PHẢI (+0.15m)</text>
 
             <!-- Ký hiệu độ dốc mặt đường -->
-            <path d="M140,46 L180,48" stroke="#38BDF8" stroke-width="1.5" marker-end="url(#arrow)" />
-            <text x="145" y="42" fill="#38BDF8" font-size="8">i = 2.0%</text>
+            <text x="160" y="52" fill="#38BDF8" font-size="8">i = 2.0% ──></text>
+            <text x="400" y="52" fill="#38BDF8" font-size="8"><── i = 2.0%</text>
 
-            <!-- Hố Thu Nước Mặt Đường (Cửa Thu & Song Chắn Rác) -->
-            <rect x="220" y="55" width="160" height="15" fill="#1E293B" stroke="#475569" stroke-width="1.5"/>
-            <!-- Các nan song chắn rác -->
+            <!-- Cửa thu nước mặt đường & Song chắn rác -->
+            <rect x="220" y="60" width="160" height="12" fill="#1E293B" stroke="#475569" stroke-width="1.5"/>
             <g stroke="#64748B" stroke-width="2">
-              <line x1="235" y1="55" x2="235" y2="70"/>
-              <line x1="255" y1="55" x2="255" y2="70"/>
-              <line x1="275" y1="55" x2="275" y2="70"/>
-              <line x1="295" y1="55" x2="295" y2="70"/>
-              <line x1="315" y1="55" x2="315" y2="70"/>
-              <line x1="335" y1="55" x2="335" y2="70"/>
-              <line x1="355" y1="55" x2="355" y2="70"/>
+              <line x1="240" y1="60" x2="240" y2="72"/>
+              <line x1="260" y1="60" x2="260" y2="72"/>
+              <line x1="280" y1="60" x2="280" y2="72"/>
+              <line x1="300" y1="60" x2="300" y2="72"/>
+              <line x1="320" y1="60" x2="320" y2="72"/>
+              <line x1="340" y1="60" x2="340" y2="72"/>
+              <line x1="360" y1="60" x2="360" y2="72"/>
             </g>
 
             <!-- Cổ hố ga bê tông thuôn xuống đáy -->
-            <path d="M220,70 L240,140 L240,280 L360,280 L360,140 L380,70" fill="#0F172A" stroke="#475569" stroke-width="2" />
+            <path d="M220,72 L238,135 L238,272 L362,272 L362,135 L380,72" fill="#0A0F1D" stroke="#334155" stroke-width="2" />
             
-            <!-- Ống cống tròn bê tông cắt ngang D1200 ở hạ lưu -->
-            <circle cx="300" cy="210" r="65" fill="#0B0F17" stroke="#64748B" stroke-width="6" />
-            <circle cx="300" cy="210" r="62" fill="none" stroke="#1E293B" stroke-width="1" />
-            <text x="300" y="138" text-anchor="middle" fill="#94A3B8" font-size="10">CỐNG BÊ TÔNG D1200</text>
+            <!-- Ống cống tròn bê tông D1200 (Tâm 300, 210, R=62) -->
+            <circle cx="300" cy="210" r="62" fill="#05080E" stroke="#64748B" stroke-width="8" />
+            <circle cx="300" cy="210" r="62" fill="none" stroke="#1E293B" stroke-width="1.5" />
+            <text x="300" y="140" text-anchor="middle" fill="#94A3B8" font-size="9">CỐNG BÊ TÔNG D1200</text>
 
             <!-- VÙNG NƯỚC ĐỘNG TRONG LÒNG CỐNG & HỐ GA -->
-            <g id="waterSystemContainer">
-              <!-- Clip path hình tròn cho cống -->
-              <clipPath id="pipeClip">
-                <circle cx="300" cy="210" r="62" />
-              </clipPath>
+            <clipPath id="pipeClip">
+              <circle cx="300" cy="210" r="58" />
+            </clipPath>
 
-              <!-- Mực nước dâng trong lòng cống -->
-              <g clip-path="url(#pipeClip)">
-                <rect id="pipeWaterLevel" x="235" y="180" width="130" height="100" fill="url(#waterGradient)"/>
-                <!-- Hiệu ứng bọt sóng trong cống -->
-                <line id="pipeWaterSurface" x1="235" y1="180" x2="365" y2="180" stroke="#00F0FF" stroke-width="2" />
-              </g>
-
-              <!-- Nước tràn lên cổ hố ga nếu quá tải (>80%) -->
-              <rect id="boxWaterOverflow" x="242" y="140" width="116" height="10" fill="url(#waterGradient)" opacity="0" class="transition-opacity duration-500"/>
-              <!-- Nước ngập mặt đường (>95%) -->
-              <rect id="streetFloodWater" x="120" y="50" width="360" height="6" fill="#00F0FF" opacity="0" class="transition-opacity duration-500"/>
+            <!-- Nước trong cống (được clip theo hình tròn) -->
+            <g clip-path="url(#pipeClip)">
+              <rect id="pipeWaterLevel" x="240" y="255" width="120" height="20" fill="url(#waterGradient)" class="transition-all duration-300"/>
+              <line id="pipeWaterSurface" x1="240" y1="255" x2="360" y2="255" stroke="#FFFFFF" stroke-width="2" opacity="0.8" class="transition-all duration-300"/>
             </g>
 
-            <!-- Giọt nước mưa rơi trực tiếp từ trên trời xuống hố -->
-            <g id="rainDropsContainer" stroke="#38BDF8" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.7">
-              <line x1="250" y1="0" x2="250" y2="50" />
-              <line x1="280" y1="5" x2="280" y2="52" />
-              <line x1="310" y1="0" x2="310" y2="54" />
-              <line x1="340" y1="10" x2="340" y2="50" />
+            <!-- Nước dềnh lên cổ hố ga khi quá tải -->
+            <rect id="boxWaterOverflow" x="240" y="140" width="120" height="15" fill="url(#waterGradient)" opacity="0" class="transition-opacity duration-300"/>
+
+            <!-- Nước ngập tràn mặt đường -->
+            <rect id="streetFloodWater" x="140" y="56" width="320" height="6" fill="#00F2FE" opacity="0" class="transition-opacity duration-300"/>
+
+            <!-- Giọt mưa rơi từ trên trời xuống -->
+            <g id="rainAnimGroup" stroke="#38BDF8" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.8">
+              <line x1="250" y1="0" x2="250" y2="55" />
+              <line x1="285" y1="5" x2="285" y2="58" />
+              <line x1="315" y1="0" x2="315" y2="57" />
+              <line x1="345" y1="10" x2="345" y2="55" />
             </g>
 
-            <!-- Rác bịt hố ga (Icon cảnh báo khi bật toggle rác) -->
+            <!-- Cảnh báo rác nghẹt miệng thu -->
             <g id="trashBlockageVisual" opacity="0" class="transition-opacity duration-300">
-              <rect x="235" y="60" width="130" height="8" fill="#E11D48" opacity="0.85"/>
-              <text x="300" y="67" text-anchor="middle" fill="#FFFFFF" font-size="8" font-weight="bold">⚠️ NGHẸT BAO NILON & RÁC THẢI (-50%)</text>
+              <rect x="220" y="66" width="160" height="8" fill="#F43F5E" opacity="0.9"/>
+              <text x="300" y="73" text-anchor="middle" fill="#FFFFFF" font-size="7.5" font-weight="bold">⚠️ NGHẼN BỞI RÁC SINH HOẠT (-50% LƯU LƯỢNG)</text>
             </g>
 
-            <!-- Chỉ thị cao độ mực nước (Water Depth Dimension) -->
-            <g id="dimensionLine" stroke="#00F0FF" stroke-width="1">
-              <line x1="380" y1="272" x2="410" y2="272"/>
-              <line id="dimWaterTop" x1="380" y1="180" x2="410" y2="180"/>
-              <line x1="400" y1="272" x2="400" y2="180" stroke-dasharray="2,2"/>
-              <text id="dimText" x="408" y="230" fill="#00F0FF" font-size="9">h = 0.85 m</text>
+            <!-- Thước đo cao độ mực nước (h) -->
+            <g id="dimensionLine" stroke="#00F2FE" stroke-width="1">
+              <line x1="375" y1="268" x2="405" y2="268"/>
+              <line id="dimWaterTop" x1="375" y1="255" x2="405" y2="255" class="transition-all duration-300"/>
+              <line id="dimVerticalLine" x1="395" y1="268" x2="395" y2="255" stroke-dasharray="2,2" class="transition-all duration-300"/>
+              <text id="dimText" x="402" y="260" fill="#00F2FE" font-size="9" class="transition-all duration-300">h = 0.15 m</text>
             </g>
           </svg>
         </div>
 
-        <div class="mt-2 flex flex-wrap justify-between text-[11px] font-mono text-slate-400">
-          <span>Khẩu độ cống: D = 1.2 m</span>
-          <span>Độ dốc đáy cống: i = 0.3%</span>
-          <span id="hydraulicFlowRate">Lưu lượng thực: Q = 1.42 m³/s</span>
+        <!-- Chỉ số thời gian thực chân SVG -->
+        <div class="mt-2.5 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-400 font-mono">
+          <div>CƯỜNG ĐỘ GIỜ: <strong id="hudCurrentRain" class="text-telemetry-cyan">0.0 mm/h</strong></div>
+          <div>LƯU LƯỢNG Q: <strong id="hydraulicFlowRate" class="text-white">0.05 m³/s</strong></div>
+          <div>TỶ LỆ LẤP ĐẦY h/D: <strong id="hudFillPercent" class="text-white">12%</strong></div>
+          <div>VẬN TỐC v: <strong id="hudVelocity" class="text-white">0.65 m/s</strong></div>
         </div>
       </div>
 
-      <!-- TRỤC THỜI GIAN TRƯỢT 24H (24-HOUR HYETOGRAPH SCRUBBER) -->
-      <div class="bg-cad-surface border border-cad-border p-4">
-        <div class="flex justify-between items-center mb-2 font-mono text-xs">
+      <!-- TIMELINE 24H: BIỂU ĐỒ MƯA TÍCH HỢP ICON THỜI TIẾT TỪNG GIỜ -->
+      <div class="bg-telemetry-panel border border-telemetry-panelBorder p-4">
+        <div class="flex flex-wrap justify-between items-center gap-2 mb-2 text-xs">
           <div class="text-white font-bold flex items-center gap-2">
-            <span>⏱️ BIỂU ĐỒ MƯA TỪNG GIỜ (HYETOGRAPH 24H)</span>
-            <span id="scrubberTimeBadge" class="bg-cad-cyan text-slate-950 px-1.5 py-0.2 font-black">17:00</span>
+            <span>⏱️ DIỄN BIẾN MƯA & THỜI TIẾT 24 GIỜ (HYETOGRAPH)</span>
+            <span id="scrubberTimeBadge" class="bg-telemetry-cyan text-slate-950 px-2 py-0.5 font-extrabold text-[11px]">17:00</span>
           </div>
-          <span class="text-slate-400 text-[10px] hidden sm:inline">KÉO THANH ĐỂ XEM MỰC NƯỚC BIẾN THIÊN</span>
+          <span class="text-slate-400 text-[10px]">RÊ CHUỘT HOẶC KÉO ĐỂ THỬ TẢI HỆ THỐNG CỐNG</span>
         </div>
 
-        <!-- Biểu đồ cột mini hiển thị lượng mưa 24h -->
-        <div id="hyetographBarContainer" class="h-20 flex items-end gap-1 pt-4 pb-1 border-b border-cad-border">
-          <!-- 24 cột giờ sẽ được render bằng JS -->
+        <!-- Biểu đồ 24 cột giờ kèm Icon thời tiết -->
+        <div id="hyetographBarContainer" class="h-28 flex items-end gap-1 pt-6 pb-1 border-b border-telemetry-panelBorder overflow-x-auto select-none">
+          <!-- 24 cột giờ được render tự động qua JS -->
         </div>
 
-        <!-- Range Slider Scrubber -->
-        <input id="hourScrubber" type="range" min="0" max="23" value="17" class="w-full mt-3 accent-cad-cyan cursor-pointer" />
+        <!-- Thanh trượt Scrubber -->
+        <input id="hourScrubber" type="range" min="0" max="23" value="17" class="w-full mt-3 accent-telemetry-cyan cursor-pointer" />
 
-        <div class="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+        <div class="flex justify-between text-[10px] text-slate-500 mt-1 font-mono">
           <span>00:00 (Đêm)</span>
           <span>06:00 (Sáng)</span>
           <span>12:00 (Trưa)</span>
@@ -391,69 +427,68 @@
         </div>
       </div>
 
-      <!-- CÔNG THỨC KỸ THUẬT & CÁC NÚT VẶN THAM SỐ (INTERACTIVE PARAMETERS) -->
-      <div class="bg-cad-surface border border-cad-border p-4 font-mono text-xs">
-        <div class="flex items-center justify-between border-b border-cad-border pb-2 mb-3">
-          <span class="font-bold text-cad-cyan">🤓 CÔNG THỨC RATIONAL METHOD: Q = 0.278 · C · I · A</span>
-          <span class="text-slate-500 text-[10px]">TÍNH TOÁN THEO TCVN</span>
+      <!-- BẢNG THAM SỐ THỦY LỰC ĐÔ THỊ (INTERACTIVE SCADA CONTROLS) -->
+      <div class="bg-telemetry-panel border border-telemetry-panelBorder p-4 text-xs">
+        <div class="flex justify-between items-center border-b border-telemetry-subtle pb-2 mb-3">
+          <span class="font-bold text-telemetry-cyan">PHÂN TÍCH THEO PHƯƠNG PHÁP RATIONAL: Q = 0.278 · C · I · A</span>
+          <span class="text-slate-500 text-[10px]">TCVN 7957:2008</span>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <!-- Toggle 1: Mặt phủ C -->
-          <div class="bg-cad-bg p-2.5 border border-cad-border">
-            <div class="text-[10px] text-slate-400 mb-1">HỆ SỐ DÒNG CHẢY (C):</div>
-            <select id="paramCover" class="w-full bg-slate-900 border border-cad-border text-cad-cyan text-xs p-1 font-bold outline-none cursor-pointer">
-              <option value="0.85" selected>Bê tông hóa 90% (C=0.85)</option>
-              <option value="0.60">Khu dân cư hỗn hợp (C=0.60)</option>
-              <option value="0.30">Công viên nhiều cây (C=0.30)</option>
+          <!-- Tham số 1 -->
+          <div class="bg-telemetry-bg p-2.5 border border-telemetry-panelBorder">
+            <div class="text-[10px] text-slate-400 mb-1">MẶT PHỦ LƯU VỰC (C):</div>
+            <select id="paramCover" class="w-full bg-slate-900 border border-telemetry-subtle text-telemetry-cyan text-xs p-1.5 font-bold outline-none cursor-pointer">
+              <option value="0.85" selected>Đô thị hóa 90% (C = 0.85)</option>
+              <option value="0.60">Khu dân cư hỗn hợp (C = 0.60)</option>
+              <option value="0.30">Công viên & Mặt nước (C = 0.30)</option>
             </select>
           </div>
 
-          <!-- Toggle 2: Rác bịt hố ga -->
-          <div class="bg-cad-bg p-2.5 border border-cad-border">
-            <div class="text-[10px] text-slate-400 mb-1">TÌNH TRẠNG HỐ GA:</div>
-            <select id="paramTrash" class="w-full bg-slate-900 border border-cad-border text-cad-cyan text-xs p-1 font-bold outline-none cursor-pointer">
-              <option value="clean" selected>Hố ga sạch (100% đón nước)</option>
-              <option value="blocked">Nghẹt bao nilon (-50% cửa thu)</option>
+          <!-- Tham số 2 -->
+          <div class="bg-telemetry-bg p-2.5 border border-telemetry-panelBorder">
+            <div class="text-[10px] text-slate-400 mb-1">CỬA THU NƯỚC HỐ GA:</div>
+            <select id="paramTrash" class="w-full bg-slate-900 border border-telemetry-subtle text-telemetry-cyan text-xs p-1.5 font-bold outline-none cursor-pointer">
+              <option value="clean" selected>Thông thoáng (100% đón nước)</option>
+              <option value="blocked">Nghẹt bao nilon (-50% lưu vực)</option>
             </select>
           </div>
 
-          <!-- Toggle 3: Triều cường chặn miệng xả -->
-          <div class="bg-cad-bg p-2.5 border border-cad-border">
+          <!-- Tham số 3 -->
+          <div class="bg-telemetry-bg p-2.5 border border-telemetry-panelBorder">
             <div class="text-[10px] text-slate-400 mb-1">TRIỀU CƯỜNG CỬA XẢ:</div>
-            <select id="paramTide" class="w-full bg-slate-900 border border-cad-border text-cad-cyan text-xs p-1 font-bold outline-none cursor-pointer">
+            <select id="paramTide" class="w-full bg-slate-900 border border-telemetry-subtle text-telemetry-cyan text-xs p-1.5 font-bold outline-none cursor-pointer">
               <option value="normal" selected>Triều kiệt (Chảy tự do)</option>
-              <option value="high">Đỉnh triều dâng (+30% nghẽn)</option>
+              <option value="high">Đỉnh triều dâng (Ngập ngược)</option>
             </select>
           </div>
         </div>
 
-        <!-- Chú thích vui của Kỹ Sư -->
-        <div class="mt-3 text-[11px] text-slate-400 flex items-start gap-1.5">
-          <span class="text-cad-amber font-bold">ℹ️ Ghi chú tính toán:</span>
-          <span>Diện tích lưu vực giả định $A = 15 \text{ ha}$. Khi triều dâng hoặc hố ga nghẹt rác, năng lực tiêu thoát thực tế giảm nghiêm trọng dù đường kính cống D1200 đã thiết kế đúng tiêu chuẩn.</span>
+        <div class="mt-3 text-[11px] text-slate-400 flex items-start gap-1.5 leading-relaxed">
+          <span class="text-telemetry-amber font-bold">ℹ️ Chú giải:</span>
+          <span>Diện tích lưu vực tính toán A = 15 ha. Mực nước hố ga phản ứng trực tiếp với lượng mưa của khung giờ được chọn trên thanh trượt và hệ số cản trở của rác thải bề mặt.</span>
         </div>
       </div>
 
-    </section>
+    </div>
 
   </main>
 
-  <!-- COMMAND LINE AUTOCAD FOOTER (EASTER EGG BAR) -->
-  <footer class="border-t border-cad-border bg-slate-950 px-4 py-2 font-mono text-xs flex items-center justify-between">
+  <!-- BOTTOM STATUS & COMMAND BAR -->
+  <footer class="border-t border-telemetry-panelBorder bg-slate-950 px-4 py-2 text-xs flex items-center justify-between font-mono">
     <div class="flex items-center gap-2 w-full max-w-2xl">
-      <span class="text-cad-cyan font-bold select-none">Command:</span>
-      <input id="cadCommandLine" type="text" placeholder="Nhập lệnh (thử gõ 'REGEN', 'DRAIN', hoặc 'HELP') rồi nhấn Enter..." class="bg-transparent text-white w-full outline-none border-none placeholder:text-slate-600 focus:placeholder:text-transparent" />
+      <span class="text-telemetry-cyan font-bold select-none">SCADA:</span>
+      <input id="cadCommandLine" type="text" placeholder="Gõ 'REGEN' để reset, 'STORM' để giả lập mưa lớn..." class="bg-transparent text-white w-full outline-none border-none placeholder:text-slate-600 focus:placeholder:text-transparent text-xs" />
     </div>
-    <div id="cadOutputMsg" class="text-cad-amber text-[11px] hidden sm:block truncate ml-4">
-      Ready. Type 'REGEN' to refresh hydraulics.
+    <div id="cadOutputMsg" class="text-telemetry-amber text-[11px] hidden sm:block truncate ml-4">
+      Hệ thống sẵn sàng. Dữ liệu trạm đo cập nhật tự động.
     </div>
   </footer>
 
-  <!-- SCRIPT LOGIC TOÀN BỘ TRANG WEB -->
+  <!-- TOÀN BỘ SCRIPT ĐIỀU HÀNH & KẾT NỐI API THỜI TIẾT + AQI -->
   <script>
     // ==========================================
-    // 1. DỮ LIỆU TỌA ĐỘ CÁC THÀNH PHỐ VIỆT NAM
+    // 1. TỌA ĐỘ VÀ CƠ SỞ DỮ LIỆU ĐỊA PHƯƠNG
     // ==========================================
     const CITIES = {
       hcm: { name: 'TP. HỒ CHÍ MINH', lat: 10.823, lon: 106.630 },
@@ -464,23 +499,38 @@
       haiphong: { name: 'HẢI PHÒNG', lat: 20.844, lon: 106.688 }
     };
 
-    // State ứng dụng
-    let currentWeatherState = {
+    // State lưu trữ dữ liệu
+    let state = {
       cityKey: 'hcm',
       hourlyRain: Array(24).fill(0),
+      hourlyWeatherCode: Array(24).fill(0),
+      hourlyTemp: Array(24).fill(28),
       selectedHour: 17,
       precipSum: 0,
       intensityMax: 0,
       peakHour: '17:00',
-      soundEnabled: true
+      soundEnabled: true,
+      aqi: 42,
+      pm25: 12.5
     };
 
+    // Chuyển mã WMO thời tiết thành Icon và Tên
+    function getWeatherMeta(code) {
+      if (code === 0) return { icon: '☀️', label: 'Quang đãng' };
+      if (code >= 1 && code <= 3) return { icon: '⛅', label: 'Nhiều mây' };
+      if (code >= 51 && code <= 55) return { icon: '🌦️', label: 'Mưa phùn' };
+      if (code >= 61 && code <= 65) return { icon: '🌧️', label: 'Mưa rào' };
+      if (code >= 80 && code <= 82) return { icon: '🌧️⚡', label: 'Mưa xối xả' };
+      if (code >= 95) return { icon: '⛈️', label: 'Dông sét' };
+      return { icon: '🌦️', label: 'Mưa rải rác' };
+    }
+
     // ==========================================
-    // 2. TẠO ÂM THANH CƠ HỌC BẰNG WEB AUDIO API
+    // 2. HIỆU ỨNG ÂM THANH CƠ HỌC BẰNG WEB AUDIO API
     // ==========================================
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playMechanicalSound(type = 'click') {
-      if (!currentWeatherState.soundEnabled) return;
+    function playSfx(type = 'click') {
+      if (!state.soundEnabled) return;
       try {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator();
@@ -490,45 +540,48 @@
 
         if (type === 'click') {
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(320, audioCtx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.04);
-          gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-          gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+          osc.frequency.setValueAtTime(360, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.03);
+          gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.03);
           osc.start();
-          osc.stop(audioCtx.currentTime + 0.04);
+          osc.stop(audioCtx.currentTime + 0.03);
         } else if (type === 'switch') {
           osc.type = 'square';
-          osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.06);
-          gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-          gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.06);
+          osc.frequency.setValueAtTime(650, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.05);
+          gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
           osc.start();
-          osc.stop(audioCtx.currentTime + 0.06);
+          osc.stop(audioCtx.currentTime + 0.05);
         }
-      } catch (e) {
-        // Trình duyệt chặn autoplay khi chưa tương tác
-      }
+      } catch (e) {}
     }
 
     // ==========================================
-    // 3. FETCH DỮ LIỆU TỪ OPEN-METEO API
+    // 3. FETCH DỮ LIỆU TỪ OPEN-METEO (WEATHER + AQI)
     // ==========================================
-    async function fetchWeatherData(cityKey) {
+    async function loadTelemetryData(cityKey) {
       const city = CITIES[cityKey];
-      document.getElementById('cadOutputMsg').innerText = `Connecting to VVTS/Open-Meteo API [Lat: ${city.lat}, Lon: ${city.lon}]...`;
+      document.getElementById('hudLat').innerText = city.lat.toFixed(2);
+      document.getElementById('hudLon').innerText = city.lon.toFixed(2);
+      document.getElementById('cadOutputMsg').innerText = `Đang kết nối Open-Meteo & Air Quality Station [${city.name}]...`;
 
       try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&hourly=precipitation&daily=precipitation_sum&timezone=Asia%2FBangkok`;
-        const res = await fetch(url);
-        const data = await res.json();
+        // 1. Fetch Thời tiết
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&hourly=precipitation,weather_code,temperature_2m&daily=precipitation_sum&timezone=Asia%2FBangkok`;
+        const weatherRes = await fetch(weatherUrl);
+        const weatherData = await weatherRes.json();
 
-        // Lấy 24 giờ đầu tiên của ngày hôm nay
-        const rain24 = (data.hourly && data.hourly.precipitation) ? data.hourly.precipitation.slice(0, 24) : Array(24).fill(0);
-        const dailySum = (data.daily && data.daily.precipitation_sum && data.daily.precipitation_sum[0] !== undefined) 
-                          ? data.daily.precipitation_sum[0] 
-                          : rain24.reduce((a, b) => a + b, 0);
+        const rain24 = (weatherData.hourly && weatherData.hourly.precipitation) ? weatherData.hourly.precipitation.slice(0, 24) : Array(24).fill(0);
+        const code24 = (weatherData.hourly && weatherData.hourly.weather_code) ? weatherData.hourly.weather_code.slice(0, 24) : Array(24).fill(0);
+        const temp24 = (weatherData.hourly && weatherData.hourly.temperature_2m) ? weatherData.hourly.temperature_2m.slice(0, 24) : Array(24).fill(28);
 
-        // Tìm cường độ cực đại và giờ đỉnh
+        let dailySum = (weatherData.daily && weatherData.daily.precipitation_sum && weatherData.daily.precipitation_sum[0] !== undefined)
+          ? weatherData.daily.precipitation_sum[0]
+          : rain24.reduce((a, b) => a + b, 0);
+
+        // Tìm giờ đỉnh
         let maxRain = 0;
         let peakH = 17;
         rain24.forEach((val, idx) => {
@@ -538,53 +591,83 @@
           }
         });
 
-        currentWeatherState.hourlyRain = rain24;
-        currentWeatherState.precipSum = parseFloat(dailySum.toFixed(1));
-        currentWeatherState.intensityMax = parseFloat(maxRain.toFixed(1));
-        currentWeatherState.peakHour = `${String(peakH).padStart(2, '0')}:00`;
-        currentWeatherState.selectedHour = peakH;
+        // 2. Fetch Chất lượng không khí (AQI)
+        try {
+          const aqiUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${city.lat}&longitude=${city.lon}&current=us_aqi,pm2_5`;
+          const aqiRes = await fetch(aqiUrl);
+          const aqiData = await aqiRes.json();
+          if (aqiData.current) {
+            state.aqi = aqiData.current.us_aqi || 45;
+            state.pm25 = aqiData.current.pm2_5 || 12.0;
+          }
+        } catch (e) {
+          state.aqi = Math.round(35 + Math.random() * 25);
+          state.pm25 = 14.2;
+        }
+
+        state.hourlyRain = rain24;
+        state.hourlyWeatherCode = code24;
+        state.hourlyTemp = temp24;
+        state.precipSum = parseFloat(dailySum.toFixed(1));
+        state.intensityMax = parseFloat(maxRain.toFixed(1));
+        state.peakHour = `${String(peakH).padStart(2, '0')}:00`;
+        state.selectedHour = peakH;
 
         document.getElementById('hourScrubber').value = peakH;
-        document.getElementById('cadOutputMsg').innerText = `Dữ liệu nạp thành công. Đỉnh mưa: ${currentWeatherState.intensityMax}mm/h lúc ${currentWeatherState.peakHour}.`;
+        document.getElementById('cadOutputMsg').innerText = `Cập nhật thành công. Đỉnh mưa: ${state.intensityMax} mm/h lúc ${state.peakHour}.`;
 
-        renderAll();
+        renderDashboard();
       } catch (err) {
-        console.warn('API Error, sử dụng dữ liệu mô phỏng kỹ thuật:', err);
-        // Dữ liệu fallback chân thực khi mất mạng
-        currentWeatherState.hourlyRain = [0,0,0,0,0,0,1,3,2,1,0,0,2,5,12,28,38,22,10,4,1,0,0,0];
-        currentWeatherState.precipSum = 72.4;
-        currentWeatherState.intensityMax = 38.0;
-        currentWeatherState.peakHour = '16:30';
-        currentWeatherState.selectedHour = 16;
-        document.getElementById('cadOutputMsg').innerText = 'API Offline. Đã kích hoạt kịch bản mưa mẫu TP.HCM.';
-        renderAll();
+        console.warn('API Offline. Sử dụng kịch bản mô phỏng:', err);
+        // Fallback thực tế
+        state.hourlyRain = [0,0,0,0,0,0,0,2,1,0,0,0,4,8,18,32,38,24,11,3,1,0,0,0];
+        state.hourlyWeatherCode = [0,0,0,0,0,1,1,61,51,1,2,2,61,63,65,82,95,65,61,51,1,0,0,0];
+        state.hourlyTemp = [26,25,25,25,26,27,29,31,32,33,33,32,31,29,27,26,25,26,27,27,27,26,26,26];
+        state.precipSum = 72.4;
+        state.intensityMax = 38.0;
+        state.peakHour = '16:00';
+        state.selectedHour = 16;
+        state.aqi = 38;
+        state.pm25 = 9.8;
+        document.getElementById('cadOutputMsg').innerText = 'Chế độ giả lập: Đã nạp kịch bản triều dâng & mưa lớn TP.HCM.';
+        renderDashboard();
       }
     }
 
     // ==========================================
-    // 4. BỘ MÁY PHÂN LOẠI & ĐÁNH GIÁ (ENGINEERING HUMOR ENGINE)
+    // 4. BỘ TÍNH TOÁN THỦY LỰC ĐỘNG TỨC THỜI (TỪNG GIỜ)
     // ==========================================
-    function calculateHydraulicStatus() {
-      const currentHourRain = currentWeatherState.hourlyRain[currentWeatherState.selectedHour] || 0;
+    function calculateInstantaneousHydraulics() {
+      // Lượng mưa thực tế tại đúng giờ được chọn
+      const rainNow = state.hourlyRain[state.selectedHour] || 0;
       const C = parseFloat(document.getElementById('paramCover').value);
       const isTrash = document.getElementById('paramTrash').value === 'blocked';
       const isTide = document.getElementById('paramTide').value === 'high';
 
-      // Công thức Rational: Q (m3/s) = 0.278 * C * I (mm/h) * A (15 ha)
-      let Q = 0.278 * C * Math.max(currentHourRain, 2) * 15 / 3.6; // Đơn vị xấp xỉ m3/s
-      if (isTrash) Q *= 1.4; // Tăng tải áp lực nước do hố ga không thoát kịp
-      if (isTide) Q *= 1.3;
+      // Q = 0.278 * C * I * A (với A = 15 ha)
+      // Lưu lượng dòng chảy cơ bản tối thiểu 0.04 m3/s
+      let Q = (0.278 * C * rainNow * 15) / 3.6;
+      if (rainNow === 0) Q = 0.04; // Dòng chảy kiệt
 
-      // Tính Rain Score tổng thể ngày hôm nay (0 - 100)
-      let baseScore = (currentWeatherState.precipSum * 0.4) + (currentWeatherState.intensityMax * 1.6);
-      if (currentWeatherState.peakHour.includes('16') || currentWeatherState.peakHour.includes('17') || currentWeatherState.peakHour.includes('18')) {
-        baseScore += 12; // Phạt giờ tan tầm
-      }
-      if (isTrash) baseScore += 10;
+      // Tính tỷ lệ lấp đầy cống (fillingRatio h/D từ 0.1 đến 1.3)
+      // Cống D1200 đạt khả năng tải tối đa tại Q ~ 1.85 m3/s (vận tốc ~ 1.6 m/s)
+      let fillingRatio = 0.12 + (rainNow / 30) * 0.75;
+      if (isTrash) fillingRatio *= 1.45;
+      if (isTide) fillingRatio += 0.25;
+
+      // Điểm rủi ro tổng quát trong ngày
+      let baseScore = (state.precipSum * 0.4) + (state.intensityMax * 1.5);
+      if (isTrash) baseScore += 12;
       if (isTide) baseScore += 8;
-      const score = Math.min(100, Math.max(12, Math.round(baseScore)));
+      const totalDayScore = Math.min(100, Math.max(12, Math.round(baseScore)));
 
-      return { Q: Q.toFixed(2), score, currentHourRain };
+      return {
+        rainNow: rainNow.toFixed(1),
+        Q: Q.toFixed(2),
+        fillingRatio: Math.min(1.25, fillingRatio),
+        totalDayScore,
+        velocity: (0.4 + (fillingRatio * 1.2)).toFixed(2)
+      };
     }
 
     function evaluateRainCharacter(score) {
@@ -592,279 +675,298 @@
         return {
           name: '"MƯA KHÔNG ĐỦ ĐIỀU KIỆN MỞ AUTOCAD"',
           stamp: 'NGHIỆM THU ĐẠT CHỈ TIÊU',
-          stampColor: '#00FF66',
+          stampColor: '#10B981',
           bike: '🟢 Lướt êm ru',
           shoes: '🟢 Trắng tinh như mới',
           car: '🟢 Điều hòa mát rượi',
-          quote: '"Thời tiết khô ráo lý tưởng. Anh em công trường đổ bê tông đúng tiến độ, tư vấn giám sát tươi cười."'
+          quote: '"Thời tiết lý tưởng. Anh em công trường đổ bê tông đúng tiến độ, tư vấn giám sát tươi cười ký biên bản nghiệm thu."'
         };
       } else if (score < 50) {
         return {
           name: '"CƠN MƯA DẠO CHƠI NGOÀI THIẾT KẾ"',
           stamp: 'CỐNG VẪN CÂN ĐƯỢC',
           stampColor: '#38BDF8',
-          bike: '🟡 Nước bắn lấm lem',
+          bike: '🟡 Bắn nhẹ mắt cá',
           shoes: '🟡 Ướt nhẹ mũi giày',
           car: '🟢 Gạt mưa số 1',
-          quote: '"Cống D1200 tự tin nuốt trọn dòng chảy. Cứ thong thả ngồi uống cà phê chờ tạnh mưa rồi hẵng dắt xe về."'
+          quote: '"Cống D1200 tự tin nuốt trọn dòng chảy. Tranh thủ uống xong ly cà phê sữa đá rồi hẵng dắt xe về vẫn an toàn."'
         };
       } else if (score < 75) {
         return {
           name: '"BẮT ĐẦU KIỂM TRA CAO ĐỘ SAN NỀN"',
           stamp: 'CHUẨN BỊ MỞ BẢN VẼ',
-          stampColor: '#FFB800',
+          stampColor: '#F59E0B',
           bike: '🔴 Sóng xô mép pô xe',
           shoes: '💀 Đổi sang dép tổ ong',
           car: '🟡 Coi chừng chết máy',
-          quote: '"Nước bắt đầu dềnh mấp mé mép bó vỉa hè. Anh em đi xe số nhớ gài đều số 1, kéo ga đều tay chớ có buông."'
+          quote: '"Mực nước mấp mé mép bó vỉa hè. Anh em đi xe số nhớ giữ đều ga số 1, chớ dại nhả ga giữa làn sóng ô tô."'
         };
       } else {
         return {
           name: '"CƠN MƯA VƯỢT QUÁ DESIGN CRITERIA"',
           stamp: 'THIẾT KẾ ĐẦU HÀNG',
-          stampColor: '#FF3366',
-          bike: '💀 Tàu ngầm lặn sâu',
-          shoes: '💀 Đi chân đất lội bộ',
+          stampColor: '#F43F5E',
+          bike: '💀 Tàu ngầm mini',
+          shoes: '💀 Đi chân đất lội nước',
           car: '💀 Thủy kích trực chờ',
-          quote: '"Theo tính toán lý thuyết thì nước phải thoát hết rồi... nhưng thực tế túi ni lông và rác thải đã biến mặt đường thành sông."'
+          quote: '"Về mặt lý thuyết cống thoát kịp. Nhưng thực tế túi nilon bịt kín hố ga đã biến mặt đường thành công viên nước Đầm Sen."'
         };
       }
     }
 
     // ==========================================
-    // 5. CẬP NHẬT GIAO DIỆN & SVG THỦY LỰC
+    // 5. CẬP NHẬT GIAO DIỆN & MẶT CẮT THỦY LỰC
     // ==========================================
-    function renderAll() {
-      const city = CITIES[currentWeatherState.cityKey];
-      const { Q, score, currentHourRain } = calculateHydraulicStatus();
-      const character = evaluateRainCharacter(score);
+    function renderDashboard() {
+      const city = CITIES[state.cityKey];
+      const hyd = calculateInstantaneousHydraulics();
+      const character = evaluateRainCharacter(hyd.totalDayScore);
 
-      // 1. Text & Titles
+      // 1. Thẻ Card Blueprint
       document.getElementById('cardLocationTitle').innerText = city.name;
-      document.getElementById('cardDate').innerText = `20/09/2026 — DỮ LIỆU THỜI GIAN THỰC`;
+      document.getElementById('cardDate').innerText = `20/09/2026 — TRẠM ĐO THỰC TẾ`;
       document.getElementById('rainCharacterName').innerText = character.name;
-      document.getElementById('rainScoreText').innerText = `${score} / 100`;
-      document.getElementById('rainScoreBar').style.width = `${score}%`;
+      document.getElementById('rainScoreText').innerText = `${hyd.totalDayScore} / 100`;
+      document.getElementById('rainScoreBar').style.width = `${hyd.totalDayScore}%`;
 
-      // Đổi màu thanh đo theo mức độ
-      if (score < 50) {
-        document.getElementById('rainScoreBar').className = 'bg-cad-cyan h-full transition-all duration-700';
-      } else if (score < 75) {
-        document.getElementById('rainScoreBar').className = 'bg-cad-amber h-full transition-all duration-700';
+      if (hyd.totalDayScore < 50) {
+        document.getElementById('rainScoreBar').className = 'bg-telemetry-cyan h-full transition-all duration-500';
+      } else if (hyd.totalDayScore < 75) {
+        document.getElementById('rainScoreBar').className = 'bg-telemetry-amber h-full transition-all duration-500';
       } else {
-        document.getElementById('rainScoreBar').className = 'bg-cad-red h-full transition-all duration-700';
+        document.getElementById('rainScoreBar').className = 'bg-telemetry-rose h-full transition-all duration-500';
       }
 
-      // Con dấu mộc
       const stampEl = document.getElementById('cardStamp');
       stampEl.innerText = character.stamp;
       stampEl.style.borderColor = character.stampColor;
       stampEl.style.color = character.stampColor;
 
-      // Số liệu đo đạc
-      document.getElementById('valPrecipSum').innerText = `${currentWeatherState.precipSum} mm`;
-      document.getElementById('valIntensityMax').innerText = `${currentWeatherState.intensityMax} mm/h`;
-      document.getElementById('valPeakHour').innerText = `Đỉnh lúc: ${currentWeatherState.peakHour}`;
+      document.getElementById('valPrecipSum').innerText = `${state.precipSum} mm`;
+      document.getElementById('valIntensityMax').innerText = `${state.intensityMax} mm/h`;
+      document.getElementById('valPeakHour').innerText = `Đỉnh lúc: ${state.peakHour}`;
 
-      // Thiệt hại dân gian & Lời phán
       document.getElementById('riskBike').innerText = character.bike;
       document.getElementById('riskShoes').innerText = character.shoes;
       document.getElementById('riskCar').innerText = character.car;
       document.getElementById('engineerQuote').innerText = character.quote;
 
-      // 2. Cập nhật Biểu đồ cột Hyetograph
-      renderHyetograph();
+      // 2. Cập nhật Widget AQI
+      document.getElementById('aqiVal').innerText = state.aqi;
+      document.getElementById('pm25Val').innerHTML = `${state.pm25} <span class="text-[9px] font-normal text-slate-500">µg/m³</span>`;
+      const aqiBadge = document.getElementById('aqiBadge');
+      if (state.aqi <= 50) {
+        aqiBadge.innerText = `TỐT (AQI ${state.aqi})`;
+        aqiBadge.className = 'px-2 py-0.5 text-[10px] font-bold bg-telemetry-emerald/20 text-telemetry-emerald border border-telemetry-emerald/40';
+        document.getElementById('airQualityHumor').innerText = '"Mưa đã rửa trôi khói bụi. Bầu không khí trong lành như trên công trường ngày nghiệm thu."';
+      } else if (state.aqi <= 100) {
+        aqiBadge.innerText = `TRUNG BÌNH (AQI ${state.aqi})`;
+        aqiBadge.className = 'px-2 py-0.5 text-[10px] font-bold bg-telemetry-amber/20 text-telemetry-amber border border-telemetry-amber/40';
+        document.getElementById('airQualityHumor').innerText = '"Không khí còn bụi nhẹ, cần một trận mưa rào D600 để dọn sạch mặt đường."';
+      } else {
+        aqiBadge.innerText = `Ô NHIỄM (AQI ${state.aqi})`;
+        aqiBadge.className = 'px-2 py-0.5 text-[10px] font-bold bg-telemetry-rose/20 text-telemetry-rose border border-telemetry-rose/40';
+        document.getElementById('airQualityHumor').innerText = '"Bụi mịn dày đặc. Khuyến cáo đóng chặt cửa kính ô tô hoặc đeo khẩu trang N95."';
+      }
 
-      // 3. Cập nhật Mặt cắt SVG Thủy lực
-      renderHydraulicCrossSection(score, currentHourRain, Q);
+      // 3. Render Timeline 24H với Icon thời tiết
+      renderTimelineWithIcons();
+
+      // 4. Render Mặt cắt thủy lực phản hồi tức thì
+      renderInstantHydraulicSVG(hyd);
     }
 
-    function renderHyetograph() {
+    function renderTimelineWithIcons() {
       const container = document.getElementById('hyetographBarContainer');
       container.innerHTML = '';
-      const maxVal = Math.max(...currentWeatherState.hourlyRain, 10);
+      const maxVal = Math.max(...state.hourlyRain, 12);
 
-      currentWeatherState.hourlyRain.forEach((val, h) => {
-        const barHeightPercent = Math.max(6, (val / maxVal) * 100);
-        const isSelected = (h === currentWeatherState.selectedHour);
+      state.hourlyRain.forEach((val, h) => {
+        const heightPct = Math.max(8, (val / maxVal) * 65); // Tối đa 65% để chừa chỗ cho icon
+        const isSelected = (h === state.selectedHour);
+        const meta = getWeatherMeta(state.hourlyWeatherCode[h]);
+        const temp = Math.round(state.hourlyTemp[h] || 28);
 
         const col = document.createElement('div');
-        col.className = 'flex-1 flex flex-col items-center h-full justify-end group cursor-pointer';
-        col.title = `${h}:00 — Mưa: ${val} mm/h`;
+        col.className = 'flex-1 min-w-[28px] sm:min-w-0 flex flex-col items-center h-full justify-end group cursor-pointer';
 
-        const bar = document.createElement('div');
-        bar.className = `w-full rounded-t-none transition-all ${
-          isSelected 
-            ? 'bg-cad-cyan ring-1 ring-white' 
-            : (val > 15 ? 'bg-cad-amber/70' : 'bg-slate-700 hover:bg-slate-500')
-        }`;
-        bar.style.height = `${barHeightPercent}%`;
+        // HTML chứa icon thời tiết phía trên cột
+        col.innerHTML = `
+          <div class="text-[10px] mb-1 transition-transform group-hover:scale-125 select-none" title="${meta.label}">
+            ${meta.icon}
+          </div>
+          <div class="w-full transition-all duration-200 ${
+            isSelected 
+              ? 'bg-telemetry-cyan ring-2 ring-white shadow-[0_0_10px_#00F2FE]' 
+              : (val > 15 ? 'bg-telemetry-amber/80' : 'bg-slate-700 hover:bg-slate-500')
+          }" style="height: ${heightPct}%;"></div>
+          <div class="text-[8px] text-slate-400 mt-1 font-mono">${temp}°</div>
+        `;
 
-        col.appendChild(bar);
         col.addEventListener('click', () => {
-          currentWeatherState.selectedHour = h;
+          state.selectedHour = h;
           document.getElementById('hourScrubber').value = h;
-          playMechanicalSound('click');
-          renderAll();
+          playSfx('click');
+          renderDashboard();
         });
 
         container.appendChild(col);
       });
 
-      document.getElementById('scrubberTimeBadge').innerText = `${String(currentWeatherState.selectedHour).padStart(2, '0')}:00`;
+      document.getElementById('scrubberTimeBadge').innerText = `${String(state.selectedHour).padStart(2, '0')}:00`;
     }
 
-    function renderHydraulicCrossSection(score, rainIntensity, Q) {
-      // Đáy cống Y = 272, Đỉnh cống Y = 148 (Đường kính 124px ~ D1200)
-      // Tỷ lệ nước dâng h/D dựa trên lưu lượng và score
-      const fillingRatio = Math.min(1.05, Math.max(0.15, (score / 100) * 1.1));
-      const waterTopY = 272 - (124 * Math.min(1.0, fillingRatio));
+    function renderInstantHydraulicSVG(hyd) {
+      // Đáy cống: Y = 268, Đỉnh cống: Y = 152 (Đường kính D=116px ~ D1200)
+      const D = 116;
+      const bottomY = 268;
+      const fill = hyd.fillingRatio;
 
-      // Cập nhật SVG nước trong cống
+      // Tính chiều cao nước dâng trong lòng cống
+      const waterHeight = Math.min(D, D * fill);
+      const waterTopY = bottomY - waterHeight;
+
+      // Cập nhật thẻ SVG nước cống
       const pipeWater = document.getElementById('pipeWaterLevel');
       const pipeSurface = document.getElementById('pipeWaterSurface');
       pipeWater.setAttribute('y', waterTopY);
-      pipeWater.setAttribute('height', 272 - waterTopY);
+      pipeWater.setAttribute('height', waterHeight);
       pipeSurface.setAttribute('y1', waterTopY);
       pipeSurface.setAttribute('y2', waterTopY);
 
-      // Cập nhật thước đo cao độ
+      // Cập nhật đường chỉ thước đo cao độ h
       document.getElementById('dimWaterTop').setAttribute('y1', waterTopY);
       document.getElementById('dimWaterTop').setAttribute('y2', waterTopY);
-      document.getElementById('dimWaterTop').nextElementSibling.setAttribute('y2', waterTopY);
-      const waterDepthMeters = (fillingRatio * 1.2).toFixed(2);
-      document.getElementById('dimText').textContent = `h = ${waterDepthMeters} m`;
-      document.getElementById('dimText').setAttribute('y', waterTopY + 14);
+      document.getElementById('dimVerticalLine').setAttribute('y2', waterTopY);
+      const waterDepthM = (Math.min(1.2, fill * 1.2)).toFixed(2);
+      document.getElementById('dimText').textContent = `h = ${waterDepthM} m`;
+      document.getElementById('dimText').setAttribute('y', waterTopY + 12);
 
-      // Cập nhật nhãn trạng thái dòng chảy
-      const statusLabel = document.getElementById('pipeStatusLabel');
+      // Cập nhật trạng thái tràn hố ga & mặt đường
+      const statusBadge = document.getElementById('pipeStatusBadge');
       const overflowBox = document.getElementById('boxWaterOverflow');
       const streetFlood = document.getElementById('streetFloodWater');
 
-      if (fillingRatio >= 0.95) {
-        statusLabel.innerText = `⚠️ CỐNG NGHẼN ÁP LỰC — TRÀN MẶT ĐƯỜNG (${Math.round(fillingRatio * 100)}%)`;
-        statusLabel.className = 'text-cad-red font-bold animate-pulse';
+      if (fill >= 1.05) {
+        statusBadge.innerText = `⚠️ CỐNG QUÁ TẢI — TRÀN MẶT ĐƯỜNG (${Math.round(fill * 100)}%)`;
+        statusBadge.className = 'px-2 py-0.5 bg-telemetry-rose text-slate-950 font-bold text-[11px] animate-pulse';
         overflowBox.style.opacity = '1';
         streetFlood.style.opacity = '1';
-      } else if (fillingRatio >= 0.70) {
-        statusLabel.innerText = `CHẢY CÓ ÁP CAO (${Math.round(fillingRatio * 100)}% CAPACITY)`;
-        statusLabel.className = 'text-cad-amber font-bold';
-        overflowBox.style.opacity = '0.6';
+      } else if (fill >= 0.75) {
+        statusBadge.innerText = `CHẢY CÓ ÁP LỰC CAO (${Math.round(fill * 100)}% CAPACITY)`;
+        statusBadge.className = 'px-2 py-0.5 bg-telemetry-amber/20 border border-telemetry-amber text-telemetry-amber font-bold text-[11px]';
+        overflowBox.style.opacity = '0.5';
         streetFlood.style.opacity = '0';
       } else {
-        statusLabel.innerText = `CHẢY TỰ DO ỔN ĐỊNH (${Math.round(fillingRatio * 100)}% CAPACITY)`;
-        statusLabel.className = 'text-cad-cyan font-bold';
+        statusBadge.innerText = `CHẢY TỰ DO ỔN ĐỊNH (${Math.round(fill * 100)}% CAPACITY)`;
+        statusBadge.className = 'px-2 py-0.5 bg-telemetry-cyan/20 border border-telemetry-cyan text-telemetry-cyan font-bold text-[11px]';
         overflowBox.style.opacity = '0';
         streetFlood.style.opacity = '0';
       }
 
-      // Cập nhật hiển thị rác nghẹt
+      // Cập nhật các thông số HUD chân SVG
+      document.getElementById('hudCurrentRain').innerText = `${hyd.rainNow} mm/h`;
+      document.getElementById('hydraulicFlowRate').innerText = `${hyd.Q} m³/s`;
+      document.getElementById('hudFillPercent').innerText = `${Math.round(fill * 100)}%`;
+      document.getElementById('hudVelocity').innerText = `${hyd.velocity} m/s`;
+
+      // Cảnh báo rác
       const isTrash = document.getElementById('paramTrash').value === 'blocked';
       document.getElementById('trashBlockageVisual').style.opacity = isTrash ? '1' : '0';
 
-      // Lưu lượng Q
-      document.getElementById('hydraulicFlowRate').innerText = `Lưu lượng đỉnh tính toán: Q = ${Q} m³/s`;
+      // Cường độ mưa rơi trên đồ họa
+      const rainGroup = document.getElementById('rainAnimGroup');
+      rainGroup.style.opacity = (parseFloat(hyd.rainNow) > 0) ? Math.min(1, 0.3 + (parseFloat(hyd.rainNow) / 30)).toString() : '0.05';
     }
 
     // ==========================================
-    // 6. SỰ KIỆN TƯƠNG TÁC (EVENT LISTENERS)
+    // 6. SỰ KIỆN TƯƠNG TÁC
     // ==========================================
     document.addEventListener('DOMContentLoaded', () => {
-      // 1. Tọa độ chuột HUD
-      window.addEventListener('mousemove', (e) => {
-        const hud = document.getElementById('mouseCoords');
-        if (hud) hud.innerText = `X: ${(e.clientX / 10).toFixed(1)} Y: ${(e.clientY / 10).toFixed(1)}`;
-      });
+      // Đồng hồ hệ thống SCADA thời gian thực
+      setInterval(() => {
+        const now = new Date();
+        document.getElementById('sysClock').innerText = now.toTimeString().split(' ')[0] + ' UTC+7';
+      }, 1000);
 
-      // 2. Đổi thành phố
+      // Đổi thành phố
       document.getElementById('citySelect').addEventListener('change', (e) => {
-        currentWeatherState.cityKey = e.target.value;
-        playMechanicalSound('switch');
-        fetchWeatherData(currentWeatherState.cityKey);
+        state.cityKey = e.target.value;
+        playSfx('switch');
+        loadTelemetryData(state.cityKey);
       });
 
-      // 3. Kéo Scrubber giờ
+      // Kéo thanh Scrubber 24H
       document.getElementById('hourScrubber').addEventListener('input', (e) => {
-        currentWeatherState.selectedHour = parseInt(e.target.value);
-        playMechanicalSound('click');
-        renderAll();
+        state.selectedHour = parseInt(e.target.value);
+        playSfx('click');
+        renderDashboard();
       });
 
-      // 4. Các nút tham số kỹ thuật
+      // Bộ tham số SCADA
       ['paramCover', 'paramTrash', 'paramTide'].forEach(id => {
         document.getElementById(id).addEventListener('change', () => {
-          playMechanicalSound('switch');
-          renderAll();
+          playSfx('switch');
+          renderDashboard();
         });
       });
 
-      // 5. Nút bật tắt âm thanh
+      // Bật/tắt âm thanh
       document.getElementById('soundToggle').addEventListener('click', () => {
-        currentWeatherState.soundEnabled = !currentWeatherState.soundEnabled;
-        document.getElementById('soundStatus').innerText = currentWeatherState.soundEnabled ? '🔊 SFX ON' : '🔇 SFX OFF';
-        if (currentWeatherState.soundEnabled) playMechanicalSound('switch');
+        state.soundEnabled = !state.soundEnabled;
+        document.getElementById('soundLabel').innerText = state.soundEnabled ? '🔊 SFX ON' : '🔇 SFX OFF';
+        if (state.soundEnabled) playSfx('switch');
       });
 
-      // 6. Xuất ảnh bản vẽ bằng html2canvas
+      // Xuất ảnh chất lượng cao
       document.getElementById('btnExport').addEventListener('click', () => {
-        playMechanicalSound('switch');
+        playSfx('switch');
         const card = document.getElementById('exportableCard');
-        document.getElementById('cadOutputMsg').innerText = 'Rendering bitmap screenshot... Vui lòng đợi 1 giây.';
+        document.getElementById('cadOutputMsg').innerText = 'Đang kết xuất phiếu bản vẽ PNG độ nét cao...';
 
         html2canvas(card, {
-          backgroundColor: '#111726',
-          scale: 2 // Xuất ảnh độ phân giải cao 2x
+          backgroundColor: '#0D131F',
+          scale: 2
         }).then(canvas => {
           const link = document.createElement('a');
-          link.download = `Phieu_Kiem_Dinh_Mua_${currentWeatherState.cityKey.toUpperCase()}_2026.png`;
+          link.download = `SCADA_Phieu_Kiem_Dinh_${state.cityKey.toUpperCase()}_2026.png`;
           link.href = canvas.toDataURL('image/png');
           link.click();
-          document.getElementById('cadOutputMsg').innerText = 'Đã xuất phiếu bản vẽ PNG thành công!';
-        }).catch(err => {
-          console.error(err);
-          document.getElementById('cadOutputMsg').innerText = 'Lỗi xuất ảnh. Hãy thử lại.';
+          document.getElementById('cadOutputMsg').innerText = 'Đã xuất phiếu kiểm định thành công!';
         });
       });
 
-      // 7. Nút Share Link
+      // Chia sẻ link
       document.getElementById('btnShare').addEventListener('click', () => {
-        playMechanicalSound('click');
+        playSfx('click');
         if (navigator.clipboard) {
           navigator.clipboard.writeText(window.location.href);
-          alert('Đã sao chép liên kết trang web vào Clipboard!');
+          alert('Đã sao chép liên kết trạm SCADA vào bộ nhớ tạm!');
         }
       });
 
-      // 8. AutoCAD Command Line Easter Egg
-      const cmdInput = document.getElementById('cadCommandLine');
-      cmdInput.addEventListener('keydown', (e) => {
+      // Command line tương tác
+      const cmd = document.getElementById('cadCommandLine');
+      cmd.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
-          const cmd = cmdInput.value.trim().toUpperCase();
-          cmdInput.value = '';
-          playMechanicalSound('click');
+          const val = cmd.value.trim().toUpperCase();
+          cmd.value = '';
+          playSfx('click');
 
-          if (cmd === 'REGEN' || cmd === 'R') {
-            document.body.style.opacity = '0.4';
-            setTimeout(() => {
-              document.body.style.opacity = '1';
-              renderAll();
-              document.getElementById('cadOutputMsg').innerText = 'Command: REGEN. Regenerating model... Nước vẫn chưa rút!';
-            }, 200);
-          } else if (cmd === 'DRAIN') {
-            document.getElementById('paramTrash').value = 'clean';
-            document.getElementById('paramTide').value = 'normal';
-            renderAll();
-            document.getElementById('cadOutputMsg').innerText = 'Command: DRAIN. Đã điều động công nhân nạo vét hố ga khẩn cấp!';
-          } else if (cmd === 'HELP') {
-            document.getElementById('cadOutputMsg').innerText = 'Available Commands: REGEN, DRAIN, CIVILD3D, ABOUT';
+          if (val === 'REGEN') {
+            loadTelemetryData(state.cityKey);
+          } else if (val === 'STORM') {
+            state.hourlyRain[state.selectedHour] = 65.0;
+            renderDashboard();
+            document.getElementById('cadOutputMsg').innerText = 'COMMAND: Kích hoạt kịch bản siêu bão 65mm/h!';
           } else {
-            document.getElementById('cadOutputMsg').innerText = `Unknown command "${cmd}". Type 'HELP' for available options.`;
+            document.getElementById('cadOutputMsg').innerText = `Lệnh khả dụng: REGEN, STORM, HELP`;
           }
         }
       });
 
-      // Khởi động lấy dữ liệu lần đầu
-      fetchWeatherData('hcm');
+      // Khởi động
+      loadTelemetryData('hcm');
     });
   </script>
 </body>
