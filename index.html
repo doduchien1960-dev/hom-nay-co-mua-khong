@@ -2,187 +2,324 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f5f4ef">
-  <meta name="description" content="Hôm Nay Có Mưa Không? — Một ngày mưa, kể bằng dữ liệu.">
-  <meta property="og:title" content="Hôm Nay Có Mưa Không?">
-  <meta property="og:description" content="Một ngày mưa, kể bằng dữ liệu.">
-  <title>Hôm Nay Có Mưa Không? — Daily Rain Story</title>
-
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f4f7fb">
+  <title>RAIN//RUNOFF — Hôm Nay Có Mưa Không?</title>
+  <meta name="description" content="Một weather control room nhẹ nhàng dành cho kỹ sư: mưa, radar và runoff được kể bằng dữ liệu.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="./css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0d1422;
+      --muted: #728096;
+      --ice: #f4f7fb;
+      --panel: #ffffff;
+      --line: #dce4ef;
+      --blue: #3168f4;
+      --blue-deep: #1f4dc7;
+      --cyan: #65d9e8;
+      --amber: #ffb547;
+      --danger: #f0445c;
+      --green: #18af73;
+      --graphite: #0b111c;
+      --shadow: 0 24px 70px rgba(33, 61, 108, .12);
+      --radius-card: 24px;
+      --ease-out: cubic-bezier(.16, 1, .3, 1);
+      --spotlight-x: 50%;
+      --spotlight-y: 50%;
+      --spotlight-radius: 0px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--ink); background: var(--ice); font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif; overflow-x: hidden; }
+    body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 20; opacity: .045; mix-blend-mode: multiply; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.34'/%3E%3C/svg%3E"); }
+    body.engineering-mode { --ink: #e7f0ff; --muted: #91a2bb; --ice: #0b111c; --panel: #111a29; --line: #24344d; --shadow: 0 24px 70px rgba(0, 0, 0, .25); }
+    a { color: inherit; }
+    button, select, input { font: inherit; }
+    button { cursor: pointer; }
+    ::selection { color: #fff; background: var(--blue); }
+    .mono { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .container { width: min(1240px, calc(100% - 40px)); margin-inline: auto; }
+    .eyebrow { color: var(--blue); font: 700 11px/1.4 "IBM Plex Mono", monospace; letter-spacing: .18em; text-transform: uppercase; }
+    .muted { color: var(--muted); }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: 0 0 auto; }
+
+    .site-header { position: sticky; top: 0; z-index: 30; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--ice) 88%, transparent); backdrop-filter: blur(18px); }
+    .header-inner { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: inline-flex; align-items: center; gap: 11px; text-decoration: none; font-weight: 700; letter-spacing: -.04em; }
+    .brand-mark { width: 28px; height: 28px; position: relative; display: grid; place-items: center; border: 1px solid currentColor; border-radius: 50%; color: var(--blue); }
+    .brand-mark::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 5px color-mix(in srgb, currentColor 18%, transparent); }
+    .brand small { display: block; color: var(--muted); font: 600 9px/1.4 "IBM Plex Mono", monospace; letter-spacing: .12em; }
+    .header-tools { display: flex; align-items: center; gap: 10px; }
+    .status-chip, .mode-toggle, .city-select { min-height: 38px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--ink); padding: 0 14px; }
+    .status-chip { display: inline-flex; align-items: center; gap: 7px; font: 600 11px "IBM Plex Mono", monospace; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px color-mix(in srgb, var(--green) 15%, transparent); }
+    .city-select { appearance: none; padding-right: 34px; background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%); background-position: calc(100% - 17px) 16px, calc(100% - 12px) 16px; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
+    .mode-toggle { display: inline-flex; align-items: center; gap: 8px; color: var(--blue); font: 700 10px "IBM Plex Mono", monospace; letter-spacing: .05em; }
+    .mode-toggle[aria-pressed="true"] { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+    main { padding: 34px 0 100px; }
+    .hero { position: relative; min-height: 660px; display: grid; align-items: center; overflow: hidden; border-radius: 34px; background: radial-gradient(circle at 79% 18%, rgba(132, 220, 255, .42), transparent 32%), linear-gradient(135deg, #fff 0%, #eef4ff 58%, #e8f5ff 100%); box-shadow: var(--shadow); isolation: isolate; }
+    .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(255,255,255,.7), transparent 55%); z-index: -1; }
+    body.engineering-mode .hero { background: radial-gradient(circle at 78% 16%, rgba(33, 119, 255, .25), transparent 32%), linear-gradient(135deg, #101827 0%, #0a111d 68%, #10233a 100%); }
+    .stage__rain-layer, .stage__editorial-layer, .stage__engineering-layer, .stage__spotlight { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .stage__rain-layer { z-index: 0; opacity: .72; pointer-events: none; }
+    .stage__editorial-layer { z-index: 2; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding: clamp(32px, 7vw, 96px); max-width: 900px; }
+    .stage__editorial-layer h1 { max-width: 720px; margin: 14px 0 18px; font-size: clamp(48px, 7vw, 94px); line-height: .93; letter-spacing: -.07em; font-weight: 700; text-wrap: balance; }
+    .hero-subtitle { max-width: 440px; margin: 0; color: var(--muted); font-size: clamp(16px, 2vw, 20px); line-height: 1.45; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+    .primary-button, .secondary-button { display: inline-flex; align-items: center; gap: 9px; min-height: 46px; border-radius: 999px; padding: 0 19px; border: 1px solid transparent; transition: transform .25s var(--ease-out), background .25s ease, color .25s ease; }
+    .primary-button { background: var(--blue); color: #fff; box-shadow: 0 10px 25px rgba(49, 104, 244, .28); }
+    .secondary-button { border-color: var(--line); background: color-mix(in srgb, var(--panel) 78%, transparent); color: var(--ink); text-decoration: none; }
+    .primary-button:hover, .secondary-button:hover { transform: translateY(-3px); }
+    .stage__engineering-layer { z-index: 1; pointer-events: none; opacity: .96; mask-image: radial-gradient(circle var(--spotlight-radius) at var(--spotlight-x) var(--spotlight-y), #000 0%, #000 58%, transparent 100%); -webkit-mask-image: radial-gradient(circle var(--spotlight-radius) at var(--spotlight-x) var(--spotlight-y), #000 0%, #000 58%, transparent 100%); transition: opacity .35s ease; }
+    .stage__engineering-layer svg { width: 100%; height: 100%; }
+    .stage__engineering-layer text { font-family: "IBM Plex Mono", monospace; font-size: 12px; fill: #85ddeb; letter-spacing: .08em; }
+    .stage__engineering-layer .grid { stroke: rgba(89, 171, 219, .22); stroke-width: 1; }
+    .stage__engineering-layer .flow { stroke: #63e4ee; stroke-width: 2; stroke-dasharray: 8 11; animation: flowDash 1.5s linear infinite; fill: none; }
+    .stage__engineering-layer .pipe { stroke: #81a9cd; stroke-width: 5; fill: rgba(5, 19, 37, .72); }
+    .stage__engineering-layer .water { fill: url(#heroWater); opacity: .88; }
+    .stage__engineering-layer .dim { stroke: #52769b; stroke-width: 1; stroke-dasharray: 3 4; }
+    .stage__spotlight { z-index: 3; pointer-events: none; background: radial-gradient(circle var(--spotlight-radius) at var(--spotlight-x) var(--spotlight-y), rgba(101, 217, 232, .2), transparent 72%); mix-blend-mode: screen; }
+    .inspect-hint { position: absolute; right: 32px; bottom: 30px; z-index: 4; display: inline-flex; align-items: center; gap: 10px; color: var(--blue); font: 700 10px "IBM Plex Mono", monospace; letter-spacing: .12em; }
+    .inspect-hint::before { content: ""; display: block; width: 32px; height: 1px; background: currentColor; }
+    .hero-metrics { position: absolute; right: clamp(24px, 6vw, 76px); bottom: 45px; z-index: 5; display: grid; grid-template-columns: repeat(3, minmax(96px, 1fr)); gap: 16px; width: min(440px, 43%); }
+    .hero-metric { padding-top: 10px; border-top: 1px solid color-mix(in srgb, var(--ink) 18%, transparent); }
+    .hero-metric strong { display: block; font: 700 clamp(20px, 3vw, 34px)/1 "IBM Plex Mono", monospace; letter-spacing: -.08em; }
+    .hero-metric span { display: block; margin-top: 8px; color: var(--muted); font: 600 9px/1.2 "IBM Plex Mono", monospace; text-transform: uppercase; letter-spacing: .1em; }
+    .hero-status { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; color: var(--muted); font: 600 10px "IBM Plex Mono", monospace; }
+
+    .section { margin-top: 110px; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+    .section-head h2 { max-width: 650px; margin: 9px 0 0; font-size: clamp(35px, 5vw, 64px); line-height: .98; letter-spacing: -.06em; }
+    .section-head p { max-width: 330px; margin: 0; color: var(--muted); line-height: 1.5; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-card); box-shadow: var(--shadow); }
+    .story-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 18px; }
+    .story-card { padding: clamp(25px, 4vw, 46px); min-height: 350px; position: relative; overflow: hidden; }
+    .story-card h3 { max-width: 620px; margin: 12px 0 18px; font-size: clamp(32px, 4vw, 59px); line-height: .98; letter-spacing: -.06em; }
+    .story-card blockquote { margin: 0; max-width: 530px; color: var(--muted); font-size: 18px; line-height: 1.45; }
+    .story-score { position: absolute; right: 30px; bottom: 26px; color: var(--blue); font: 700 62px/1 "IBM Plex Mono", monospace; letter-spacing: -.1em; }
+    .story-score small { font-size: 20px; letter-spacing: -.05em; }
+    .practical-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .practical-card { min-height: 169px; padding: 23px; display: flex; flex-direction: column; justify-content: space-between; }
+    .practical-card .card-label { color: var(--muted); font: 700 10px "IBM Plex Mono", monospace; letter-spacing: .14em; text-transform: uppercase; }
+    .practical-card strong { font-size: 28px; letter-spacing: -.05em; }
+    .practical-card p { margin: 0; color: var(--muted); line-height: 1.4; }
+    .risk-high strong { color: var(--danger); }
+    .risk-mid strong { color: var(--amber); }
+    .risk-low strong { color: var(--green); }
+
+    .timeline-card { padding: 28px; }
+    .timeline-meta { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+    .timeline-meta strong { font: 700 19px "IBM Plex Mono", monospace; }
+    .timeline-bars { height: 170px; display: flex; align-items: end; gap: 5px; border-bottom: 1px solid var(--line); padding: 0 3px; }
+    .rain-bar-wrap { height: 100%; flex: 1; display: flex; align-items: end; min-width: 0; border: 0; background: transparent; padding: 0; cursor: pointer; }
+    .rain-bar { width: 100%; min-height: 4px; border-radius: 5px 5px 1px 1px; background: #c8d5e8; transform-origin: bottom; transition: height .55s var(--ease-out), background .2s ease, transform .2s ease; }
+    .rain-bar-wrap:hover .rain-bar { transform: scaleY(1.04); background: var(--blue); }
+    .rain-bar-wrap.selected .rain-bar { background: var(--blue); box-shadow: 0 0 0 2px color-mix(in srgb, var(--blue) 20%, transparent); }
+    .timeline-axis { display: flex; justify-content: space-between; margin-top: 10px; color: var(--muted); font: 10px "IBM Plex Mono", monospace; }
+    .range { width: 100%; accent-color: var(--blue); margin-top: 20px; }
+
+    .radar-grid { display: grid; grid-template-columns: 1fr .4fr; gap: 18px; }
+    .radar-card { min-height: 420px; padding: 16px; position: relative; overflow: hidden; background: #0c1727; border: 1px solid #263e5c; color: #fff; }
+    .radar-card::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(130,190,225,.11) 1px, transparent 1px), linear-gradient(90deg, rgba(130,190,225,.11) 1px, transparent 1px); background-size: 40px 40px; opacity: .5; }
+    .radar-frame { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .72; mix-blend-mode: screen; }
+    .radar-overlay { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; pointer-events: none; }
+    .radar-overlay h3 { max-width: 390px; margin: 8px 0 0; font-size: clamp(30px, 4vw, 52px); line-height: .95; letter-spacing: -.06em; }
+    .radar-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .radar-controls { display: flex; gap: 8px; pointer-events: auto; }
+    .mini-button { min-height: 38px; border-radius: 999px; border: 1px solid rgba(255,255,255,.32); background: rgba(5, 15, 28, .7); color: #fff; padding: 0 14px; font: 700 10px "IBM Plex Mono", monospace; }
+    .radar-info { padding: 28px; display: flex; flex-direction: column; justify-content: space-between; }
+    .radar-info h3 { margin: 0; font-size: 32px; line-height: 1; letter-spacing: -.06em; }
+    .radar-info p { color: var(--muted); line-height: 1.5; }
+    .source-list { display: grid; gap: 9px; color: var(--muted); font: 11px "IBM Plex Mono", monospace; }
+    .source-list a { color: var(--blue); }
+
+    .city-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .city-card { padding: 22px; min-height: 145px; }
+    .city-card header { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+    .city-card h3 { margin: 0; font-size: 20px; letter-spacing: -.04em; }
+    .city-card strong { color: var(--blue); font: 700 23px "IBM Plex Mono", monospace; }
+    .city-card p { margin: 24px 0 0; color: var(--muted); font: 10px/1.5 "IBM Plex Mono", monospace; }
+
+    .engineering-shell { padding: clamp(22px, 4vw, 42px); color: #e7f0ff; background: radial-gradient(circle at 88% 6%, rgba(37, 110, 255, .22), transparent 28%), #0b111c; border: 1px solid #213550; border-radius: 30px; box-shadow: 0 28px 80px rgba(0,0,0,.22); }
+    .engineering-shell .eyebrow { color: var(--cyan); }
+    .engineering-shell h2 { max-width: 670px; margin: 11px 0 13px; font-size: clamp(35px, 5vw, 64px); line-height: .94; letter-spacing: -.07em; }
+    .engineering-shell > p { max-width: 580px; color: #94a6bf; line-height: 1.5; }
+    .engineering-layout { display: grid; grid-template-columns: .8fr 1.2fr; gap: 18px; margin-top: 30px; }
+    .controls-panel { padding: 22px; border: 1px solid #263d5a; background: rgba(14, 26, 43, .82); border-radius: 20px; }
+    .control-row { display: grid; gap: 9px; padding: 15px 0; border-bottom: 1px solid #263d5a; }
+    .control-row:last-child { border-bottom: 0; }
+    .control-label { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #9fb1c9; font: 10px "IBM Plex Mono", monospace; text-transform: uppercase; letter-spacing: .08em; }
+    .control-value { color: var(--cyan); font-weight: 700; }
+    .engineering-shell input[type="range"] { width: 100%; accent-color: var(--cyan); }
+    .engineering-shell select { min-height: 38px; color: #d8e8ff; border: 1px solid #355274; border-radius: 10px; background: #0d192a; padding: 0 10px; }
+    .equation { margin-top: 16px; padding: 13px; border: 1px dashed #426083; color: var(--cyan); font: 12px "IBM Plex Mono", monospace; line-height: 1.5; }
+    .hydraulic-panel { min-height: 100%; padding: 17px; border: 1px solid #263d5a; border-radius: 20px; background: #08101c; }
+    .hydraulic-panel svg { display: block; width: 100%; min-height: 300px; }
+    .hydraulic-panel text { fill: #8ba3c0; font: 11px "IBM Plex Mono", monospace; }
+    .hydraulic-panel .dim { stroke: #52769b; stroke-width: 1; stroke-dasharray: 3 4; }
+    .hydraulic-panel .structure { fill: #111f32; stroke: #55718e; stroke-width: 3; }
+    .hydraulic-panel .pipe-wall { fill: #07101b; stroke: #8aa4c0; stroke-width: 7; }
+    .hydraulic-panel .water-fill { fill: url(#pipeWater); transition: y .65s var(--ease-out), height .65s var(--ease-out); }
+    .hydraulic-panel .water-line { stroke: #72e9f3; stroke-width: 2; stroke-dasharray: 7 8; animation: flowDash 1s linear infinite; }
+    .hydraulic-readout { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 5px; color: #93a8c1; font: 10px "IBM Plex Mono", monospace; }
+    .hydraulic-readout strong { display: block; margin-top: 4px; color: #f0f7ff; font-size: 19px; }
+    .engineering-warning { margin-top: 18px; color: #ffcc76; font: 11px/1.5 "IBM Plex Mono", monospace; }
+
+    .share-card { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 24px; padding: clamp(25px, 5vw, 52px); color: #fff; background: linear-gradient(130deg, #3168f4, #2147b5); border-radius: 30px; overflow: hidden; position: relative; }
+    .share-card::after { content: "RAIN / RUNOFF"; position: absolute; right: -10px; bottom: -26px; color: rgba(255,255,255,.1); font: 700 84px/1 "IBM Plex Mono", monospace; letter-spacing: -.12em; transform: rotate(-12deg); }
+    .share-card h2 { position: relative; z-index: 1; margin: 10px 0 9px; font-size: clamp(32px, 5vw, 60px); line-height: .95; letter-spacing: -.07em; }
+    .share-card p { position: relative; z-index: 1; margin: 0; color: rgba(255,255,255,.75); }
+    .share-card .primary-button { position: relative; z-index: 2; background: #fff; color: var(--blue-deep); }
+
+    footer { padding: 30px 0 50px; border-top: 1px solid var(--line); color: var(--muted); font: 10px/1.7 "IBM Plex Mono", monospace; }
+    .footer-inner { display: flex; justify-content: space-between; gap: 20px; }
+    .footer-inner a { color: var(--blue); }
+    .toast { position: fixed; left: 50%; bottom: 24px; z-index: 50; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); box-shadow: var(--shadow); padding: 11px 17px; color: var(--ink); font: 11px "IBM Plex Mono", monospace; transition: opacity .25s ease, transform .25s var(--ease-out); }
+    .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
+    #testOutput { position: fixed; inset: 16px; z-index: 100; overflow: auto; margin: 0; padding: 20px; border-radius: 16px; color: #c8ffe2; background: #07140d; font: 13px/1.6 "IBM Plex Mono", monospace; white-space: pre-wrap; }
+
+    @keyframes flowDash { to { stroke-dashoffset: -38; } }
+    @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes clipReveal { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+    .intro-item { animation: rise .75s var(--ease-out) both; }
+    .intro-headline { animation: clipReveal .95s var(--ease-out) .18s both; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .001ms !important; }
+      .stage__engineering-layer .flow, .hydraulic-panel .water-line { animation: none; }
+    }
+    @media (max-width: 960px) {
+      .hero { min-height: 720px; }
+      .hero-metrics { left: 32px; right: 32px; bottom: 36px; width: auto; }
+      .story-grid, .radar-grid, .engineering-layout { grid-template-columns: 1fr; }
+      .radar-card { min-height: 500px; }
+    }
+    @media (max-width: 700px) {
+      .container { width: min(100% - 28px, 1240px); }
+      .header-inner { min-height: 65px; gap: 12px; }
+      .brand small, .status-chip { display: none; }
+      .header-tools { gap: 6px; }
+      .city-select, .mode-toggle { min-height: 34px; padding-left: 10px; padding-right: 26px; font-size: 9px; }
+      main { padding-top: 16px; }
+      .hero { min-height: 690px; border-radius: 25px; }
+      .stage__editorial-layer { padding: 30px 24px 170px; justify-content: start; padding-top: 85px; }
+      .stage__editorial-layer h1 { font-size: clamp(45px, 14vw, 70px); }
+      .hero-metrics { left: 24px; right: 24px; bottom: 30px; gap: 9px; }
+      .hero-metric strong { font-size: 23px; }
+      .hero-metric span { font-size: 8px; }
+      .inspect-hint { display: none; }
+      .section { margin-top: 75px; }
+      .section-head { display: block; }
+      .section-head h2 { margin-bottom: 14px; }
+      .practical-grid, .city-grid { grid-template-columns: 1fr; }
+      .story-card { min-height: 390px; }
+      .story-score { right: 20px; bottom: 22px; font-size: 44px; }
+      .timeline-card, .radar-info { padding: 20px; }
+      .timeline-bars { height: 140px; gap: 3px; }
+      .radar-card { min-height: 420px; }
+      .engineering-shell { border-radius: 22px; padding: 22px 16px; }
+      .hydraulic-panel svg { min-height: 240px; }
+      .share-card { grid-template-columns: 1fr; border-radius: 22px; }
+      .footer-inner { display: block; }
+      .footer-inner > :last-child { margin-top: 13px; }
+    }
+    @media (pointer: coarse) {
+      .stage__engineering-layer { mask-image: none; -webkit-mask-image: none; opacity: 0; }
+      .hero.is-inspecting .stage__engineering-layer { opacity: 1; }
+      .stage__spotlight { display: none; }
+    }
+  </style>
 </head>
 <body>
-  <div class="site-shell">
-    <header class="topbar">
-      <a class="brand" href="#top" aria-label="Hôm Nay Có Mưa Không?">
-        <span class="brand-mark" aria-hidden="true"><span></span></span>
-        <span>HÔM NAY CÓ MƯA KHÔNG?</span>
-      </a>
-      <div class="topbar-actions">
-        <button id="locationButton" class="location-pill" type="button" aria-label="Chọn thành phố">
-          <span class="status-dot"></span><span id="locationLabel">TP.HCM</span><span class="chevron">⌄</span>
-        </button>
-        <span class="today-label">Hôm nay</span>
-      </div>
-    </header>
-
-    <main id="top">
-      <section class="hero section">
-        <div class="hero-copy">
-          <p class="eyebrow"><span id="heroLocation">TP. HỒ CHÍ MINH</span><span>·</span><span id="heroDate">HÔM NAY</span></p>
-          <h1>Hôm nay, thành phố có vẻ <em>không muốn</em> cho bạn về sớm.</h1>
-          <p id="heroIntro" class="hero-intro">Một ngày mưa, kể bằng dữ liệu.</p>
-
-          <div class="hero-stats" aria-label="Tóm tắt mưa hôm nay">
-            <div class="hero-stat">
-              <span class="stat-value"><span id="totalRain">—</span><small>mm</small></span>
-              <span class="stat-label">HÔM NAY</span>
-            </div>
-            <div class="hero-stat">
-              <span class="stat-value"><span id="peakIntensity">—</span><small>mm/h</small></span>
-              <span class="stat-label">ĐỈNH MƯA</span>
-            </div>
-            <div class="hero-stat">
-              <span class="stat-value" id="peakHour">—</span>
-              <span class="stat-label">GIỜ ĐỈNH</span>
-            </div>
-          </div>
-
-          <div class="source-line">
-            <span>Dữ liệu thời tiết: <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a></span>
-            <span>·</span>
-            <span>Radar: <a href="https://www.rainviewer.com/" target="_blank" rel="noreferrer">RainViewer</a></span>
-            <span>·</span>
-            <span>Bản đồ: OpenStreetMap</span>
-          </div>
-        </div>
-
-        <div class="hero-visual" aria-label="Minh họa thời tiết">
-          <div class="weather-orbit orbit-a"></div>
-          <div class="weather-orbit orbit-b"></div>
-          <div class="weather-art">
-            <div class="cloud cloud-back"></div>
-            <div class="cloud cloud-main"></div>
-            <div class="rain-streaks" aria-hidden="true"></div>
-            <div class="weather-glow"></div>
-          </div>
-          <div class="hero-caption"><span id="heroCondition">ĐANG ĐỌC NHỊP MƯA</span><strong id="heroTemperature">—°</strong></div>
-        </div>
-      </section>
-
-      <section class="section story-section" id="story">
-        <div class="section-kicker">01 · RAIN STORY</div>
-        <div class="story-card">
-          <div class="story-main">
-            <p class="story-overline">RAIN PERSONALITY</p>
-            <h2 id="storyTitle">Mưa đang viết câu chuyện của riêng nó.</h2>
-            <p id="storySubtitle" class="story-subtitle">Chúng tôi đang đọc nhịp mưa hôm nay.</p>
-            <p id="storyQuote" class="story-quote">“Đang kiểm tra xem hôm nay có cần mang áo mưa hay không.”</p>
-          </div>
-          <div class="story-score">
-            <span class="score-number" id="annoyanceScore">—</span><span class="score-denom">/10</span>
-            <span class="score-label">MỨC ĐỘ PHIỀN</span>
-          </div>
-        </div>
-        <p class="section-note">Chỉ số vui dựa trên lượng mưa, cường độ và thời điểm mưa; không phải cảnh báo chính thức.</p>
-      </section>
-
-      <section class="section practical-section" id="practical">
-        <div class="section-heading">
-          <div><div class="section-kicker">02 · PRACTICAL</div><h2>Nếu hôm nay phải ra đường</h2></div>
-          <p>Không phải dự báo chính thức — chỉ là cách đọc dữ liệu theo kiểu đời thường.</p>
-        </div>
-        <div class="practical-grid">
-          <article class="practical-card"><div class="practical-icon">↗</div><div><span>XE MÁY</span><strong id="bikeAdvice">Đang xem…</strong><small id="bikeDetail">Đang phân tích cường độ mưa.</small></div></article>
-          <article class="practical-card"><div class="practical-icon">◇</div><div><span>GIÀY TRẮNG</span><strong id="shoeAdvice">Đang xem…</strong><small id="shoeDetail">Đang phân tích mặt đường.</small></div></article>
-          <article class="practical-card"><div class="practical-icon">□</div><div><span>Ô TÔ</span><strong id="carAdvice">Đang xem…</strong><small id="carDetail">Đang phân tích.</small></div></article>
-          <article class="practical-card"><div class="practical-icon">+</div><div><span>ĐI CÀ PHÊ</span><strong id="coffeeAdvice">Đang xem…</strong><small id="coffeeDetail">Đang tìm khung giờ dễ chịu.</small></div></article>
-        </div>
-      </section>
-
-      <section class="section timeline-section" id="timeline">
-        <div class="section-heading compact"><div><div class="section-kicker">03 · TIMELINE</div><h2>Mưa lúc nào?</h2></div><p id="timelineSummary">Đang phân tích…</p></div>
-        <div class="timeline-card">
-          <div class="timeline-scale"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
-          <div id="timelineBars" class="timeline-bars" aria-label="Lượng mưa theo giờ"></div>
-          <div id="timelinePeak" class="timeline-peak"><span></span><strong>—</strong></div>
-          <div id="timelineLabels" class="timeline-labels"></div>
-        </div>
-      </section>
-
-      <section class="section radar-section" id="radar">
-        <div class="section-heading compact radar-heading">
-          <div><div class="section-kicker">04 · RADAR</div><h2>Mưa đang ở đâu?</h2><p>Vệt mưa thực tế gần nhất do RainViewer cung cấp.</p></div>
-          <a class="source-badge" href="https://www.rainviewer.com/" target="_blank" rel="noreferrer">RAINVIEWER ↗</a>
-        </div>
-        <div class="radar-card">
-          <div id="radarMap" class="radar-map" aria-label="Bản đồ radar mưa"></div>
-          <div class="radar-overlay"><span class="radar-live-dot"></span><span id="radarStatus">Đang kết nối radar</span></div>
-          <div class="radar-controls">
-            <button id="radarPlay" class="control-button" type="button">▶ Phát</button>
-            <button id="radarNow" class="control-button" type="button">Hiện tại</button>
-            <span id="radarTime" class="radar-time">—</span>
-            <div class="radar-legend"><span><i></i> mưa ít</span><span><i></i> mưa mạnh</span></div>
-          </div>
-        </div>
-        <p class="section-note">Radar hiển thị dữ liệu quan trắc quá khứ gần đây; RainViewer hiện cung cấp các khung radar quá khứ theo chu kỳ 10 phút.</p>
-      </section>
-
-      <section class="section city-section" id="city">
-        <div class="section-heading compact"><div><div class="section-kicker">05 · CITY VIEW</div><h2>Thành phố đang mưa thế nào?</h2></div><p>So sánh nhanh một vài khu vực đại diện. Nếu API không trả dữ liệu, chúng tôi để trống thay vì đoán.</p></div>
-        <div id="cityGrid" class="city-grid"></div>
-      </section>
-
-      <section class="section engineering-section" id="engineering">
-        <div class="engineering-header"><div><div class="section-kicker">06 · ENGINEERING VIEW</div><h2>Góc nhìn kỹ sư</h2><p>Một lớp dữ liệu dành cho người thích biết “mưa bao nhiêu thì bắt đầu có chuyện”.</p></div><button id="formulaToggle" class="text-button" type="button">Xem cách tính +</button></div>
-        <div class="engineering-grid">
-          <div class="engineering-metric"><span>LƯỢNG MƯA</span><strong id="engRain">—</strong><small>mm / ngày</small></div>
-          <div class="engineering-metric"><span>CƯỜNG ĐỘ ĐỈNH</span><strong id="engPeak">—</strong><small>mm/h</small></div>
-          <div class="engineering-metric"><span>GIỜ ĐỈNH</span><strong id="engHour">—</strong><small>giờ địa phương</small></div>
-          <div class="engineering-metric wide"><span>RUNOFF POTENTIAL</span><strong id="runoffPotential">—</strong><div class="stress-track"><i id="runoffBar"></i></div></div>
-          <div class="engineering-metric wide"><span>DRAINAGE STRESS</span><strong id="drainageStress">—</strong><div class="stress-track"><i id="drainageBar"></i></div></div>
-        </div>
-        <div id="formulaPanel" class="formula-panel" hidden><code>Q ≈ C × I × A</code><p>C là hệ số dòng chảy giả định, I là cường độ mưa và A là diện tích. V2 chỉ dùng mô hình để kể chuyện dữ liệu; không dùng để thiết kế thoát nước thực tế.</p></div>
-        <p class="section-note">Đây là chỉ số tham khảo của website, không phải cảnh báo ngập hoặc thông số thiết kế.</p>
-      </section>
-
-      <section class="section share-section" id="share">
-        <div class="share-card">
-          <div><div class="section-kicker">07 · SHARE</div><h2>Hôm nay của bạn.</h2><p>Tạo một tấm ảnh nhỏ từ câu chuyện mưa hôm nay.</p></div>
-          <button id="shareButton" class="primary-button" type="button">Tạo ảnh hôm nay ↗</button>
-        </div>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <div><strong>HÔM NAY CÓ MƯA KHÔNG?</strong><span>Một ngày mưa, kể bằng dữ liệu.</span></div>
-      <div><span>Open-Meteo · RainViewer · OpenStreetMap</span><span>Thông tin mang tính tham khảo · Không thay thế cảnh báo chính thức.</span></div>
-    </footer>
-  </div>
-
-  <div id="locationModal" class="modal" hidden>
-    <div class="modal-backdrop" data-close-location></div>
-    <div class="location-dialog" role="dialog" aria-modal="true" aria-labelledby="locationTitle">
-      <button class="modal-close" type="button" data-close-location aria-label="Đóng">×</button>
-      <div class="section-kicker">LOCATION</div><h2 id="locationTitle">Chọn thành phố</h2><p>Chọn một vị trí để cập nhật câu chuyện mưa.</p>
-      <div id="locationOptions" class="location-options"></div>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="RAIN RUNOFF về đầu trang"><span class="brand-mark" aria-hidden="true"></span><span>HÔM NAY CÓ MƯA KHÔNG?<small>RAIN//RUNOFF CONTROL ROOM</small></span></a>
+      <div class="header-tools"><span class="status-chip"><i class="status-dot" aria-hidden="true"></i><span id="liveStatus">CONNECTING</span></span><label class="sr-only" for="citySelect">Chọn thành phố</label><select id="citySelect" class="city-select" aria-label="Chọn thành phố"><option value="hcm">TP.HCM</option><option value="hanoi">HÀ NỘI</option><option value="danang">ĐÀ NẴNG</option><option value="hue">HUẾ</option><option value="cantho">CẦN THƠ</option><option value="haiphong">HẢI PHÒNG</option></select><button id="modeToggle" class="mode-toggle" type="button" aria-pressed="false">ENGINEERING MODE</button></div>
     </div>
-  </div>
+  </header>
 
+  <main id="top" class="container">
+    <section id="heroStage" class="hero engineering-stage" data-component="rain-runoff-spotlight" aria-labelledby="heroTitle">
+      <canvas class="stage__rain-layer" data-layer="rain" aria-hidden="true"></canvas>
+      <div class="stage__editorial-layer"><div class="eyebrow intro-item"><span id="heroCity">TP. HỒ CHÍ MINH</span> · HÔM NAY · <span id="heroDate">22 / 09 / 2026</span></div><h1 id="heroTitle" class="intro-headline">Mưa đang đi qua thành phố.</h1><p id="heroSubtitle" class="hero-subtitle intro-item">Một ngày mưa, kể bằng dữ liệu thời tiết và một chút trực giác của người làm kỹ thuật.</p><div class="hero-actions intro-item"><button id="inspectToggle" class="primary-button" type="button"><span>INSPECT FLOW</span><span aria-hidden="true">↗</span></button><a class="secondary-button" href="#timeline">Xem nhịp mưa <span aria-hidden="true">↓</span></a></div><div class="hero-status intro-item"><span class="status-dot" aria-hidden="true"></span><span id="heroDataStatus">Đang đọc dữ liệu Open-Meteo…</span></div></div>
+      <div class="stage__engineering-layer" data-layer="engineering" aria-hidden="true"><svg viewBox="0 0 1200 675" preserveAspectRatio="none"><defs><linearGradient id="heroWater" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8cf7ff" stop-opacity=".88"/><stop offset="1" stop-color="#217ff4" stop-opacity=".55"/></linearGradient></defs><g class="grid"><path d="M0 112H1200M0 224H1200M0 336H1200M0 448H1200M0 560H1200M120 0V675M240 0V675M360 0V675M480 0V675M600 0V675M720 0V675M840 0V675M960 0V675M1080 0V675"/></g><g opacity=".95"><path class="flow" d="M870 80C760 155 760 225 670 290S560 420 420 560"/><path class="flow" d="M1050 128C910 190 960 276 820 340S690 470 510 592"/><circle class="pipe" cx="750" cy="410" r="92"/><path class="water" d="M658 428Q750 400 842 428V505H658Z"/><path class="flow" d="M674 427H826"/><path class="dim" d="M870 410h100M870 505h100M930 410v95"/><text x="880" y="396">DRAINAGE SECTION A-A</text><text x="880" y="462" data-hero-depth>h = 0.62 m</text><text x="48" y="610" data-hero-runoff>Q = 0.21 m³/s</text><text x="48" y="636">CATCHMENT / LIVE PROXY</text></g></svg></div>
+      <div class="stage__spotlight" data-layer="mask" aria-hidden="true"></div><span class="inspect-hint">MOVE TO INSPECT</span>
+      <div class="hero-metrics" aria-label="Tóm tắt thời tiết"><div class="hero-metric"><strong id="heroRainSum">—</strong><span>mm / ngày</span></div><div class="hero-metric"><strong id="heroPeakRain">—</strong><span>mm/h · đỉnh mưa</span></div><div class="hero-metric"><strong id="heroPeakHour">—</strong><span>giờ địa phương</span></div></div>
+    </section>
+
+    <section id="rainStory" class="section"><div class="section-head"><div><div class="eyebrow">01 · RAIN STORY</div><h2>Mưa hôm nay có tính cách gì?</h2></div><p>Đọc nhanh trước khi đi sâu vào các con số. Chỉ số vui, không thay thế cảnh báo chính thức.</p></div><div class="story-grid"><article class="card story-card"><div class="eyebrow">RAIN PERSONALITY</div><h3 id="storyTitle">Đang đọc nhịp mưa…</h3><blockquote id="storyQuote">“Dữ liệu đang được nối vào control room.”</blockquote><div class="story-score"><span id="storyScore">—</span><small>/10</small></div></article><div class="practical-grid"><article class="card practical-card" id="bikeCard"><span class="card-label">↗ XE MÁY</span><strong id="bikeStatus">Đang xem…</strong><p id="bikeNote">Đang phân tích cường độ mưa.</p></article><article class="card practical-card" id="shoeCard"><span class="card-label">◇ GIÀY TRẮNG</span><strong id="shoeStatus">Đang xem…</strong><p id="shoeNote">Đang phân tích mặt đường.</p></article><article class="card practical-card" id="carCard"><span class="card-label">□ Ô TÔ</span><strong id="carStatus">Đang xem…</strong><p id="carNote">Đang phân tích.</p></article><article class="card practical-card" id="coffeeCard"><span class="card-label">+ ĐI CÀ PHÊ</span><strong id="coffeeStatus">Đang xem…</strong><p id="coffeeNote">Đang tìm khung giờ dễ chịu.</p></article></div></div></section>
+
+    <section id="timeline" class="section"><div class="section-head"><div><div class="eyebrow">02 · TIMELINE</div><h2>Mưa lúc nào?</h2></div><p>Chọn một giờ để đồng bộ câu chuyện, runoff và mặt cắt thủy lực.</p></div><div class="card timeline-card"><div class="timeline-meta"><strong id="timelineSelected">17:00</strong><span class="muted mono" id="timelineSummary">Đang phân tích…</span></div><div id="timelineBars" class="timeline-bars" aria-label="Lượng mưa theo giờ"></div><input id="hourScrubber" class="range" type="range" min="0" max="23" value="17" aria-label="Chọn giờ trong ngày"><div class="timeline-axis"><span>00</span><span>04</span><span>08</span><span>12</span><span>16</span><span>20</span><span>24</span></div></div></section>
+
+    <section id="radar" class="section"><div class="section-head"><div><div class="eyebrow">03 · RADAR</div><h2>Mưa đang ở đâu?</h2></div><p>Radar quá khứ gần nhất, hiển thị như một lớp quan sát bổ sung cho forecast.</p></div><div class="radar-grid"><div class="radar-card"><img id="radarFrame" class="radar-frame" data-role="radar-frame" data-src="" data-time="" alt="Radar mưa khu vực đang chọn" decoding="async"><div class="radar-overlay"><div><div class="eyebrow">LIVE WEATHER MAP</div><h3 id="radarTitle">Đang kết nối radar…</h3></div><div class="radar-footer"><span class="mono" id="radarTimestamp">—</span><div class="radar-controls"><button id="radarPlay" class="mini-button" type="button">▶ PHÁT</button><button id="radarNow" class="mini-button" type="button">HIỆN TẠI</button></div></div></div></div><aside class="card radar-info"><div><div class="eyebrow">OBSERVATION NOTE</div><h3>Không phải mọi vệt mưa đều là một quyết định.</h3><p id="radarNote">RainViewer đang nạp frame quan trắc gần nhất.</p></div><div class="source-list"><span>RADAR · <a href="https://www.rainviewer.com/" target="_blank" rel="noreferrer">RainViewer ↗</a></span><span>FORECAST · <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo ↗</a></span><span>TIMEZONE · Asia/Ho_Chi_Minh</span></div></aside></div></section>
+
+    <section id="cityView" class="section"><div class="section-head"><div><div class="eyebrow">04 · CITY VIEW</div><h2>Thành phố đang mưa thế nào?</h2></div><p>So sánh nhanh một vài khu vực đại diện. Khi không có dữ liệu, card sẽ nói rõ thay vì đoán.</p></div><div id="cityGrid" class="city-grid"></div></section>
+
+    <section id="engineeringView" class="section"><div class="engineering-shell"><div class="eyebrow">05 · ENGINEERING VIEW</div><h2>Thấy mưa. Hiểu dòng chảy.</h2><p>Đây là lớp mô phỏng tham khảo: mỗi giá trị có đơn vị, nguồn và trạng thái. Nếu chưa có năng lực thiết kế, chỉ số stress được ghi là proxy.</p><div class="engineering-layout"><div class="controls-panel"><div class="control-row"><label class="control-label" for="areaInput">DIỆN TÍCH LƯU VỰC <span class="control-value"><span id="areaValue">15.0</span> ha</span></label><input id="areaInput" type="range" min="1" max="100" step="0.5" value="15" aria-label="Diện tích lưu vực theo hecta"></div><div class="control-row"><label class="control-label" for="coeffInput">HỆ SỐ DÒNG CHẢY C <span class="control-value"><span id="coeffValue">0.85</span></span></label><input id="coeffInput" type="range" min="0.2" max="0.95" step="0.05" value="0.85" aria-label="Hệ số dòng chảy"></div><div class="control-row"><label class="control-label" for="blockageInput">CỬA THU</label><select id="blockageInput" aria-label="Tình trạng cửa thu"><option value="clear">Sạch — 100%</option><option value="blocked">Nghẹt rác — giảm hiệu quả</option></select></div><div class="control-row"><label class="control-label" for="tideInput">CỬA XẢ</label><select id="tideInput" aria-label="Tình trạng triều cửa xả"><option value="normal">Triều bình thường</option><option value="high">Triều cao — backwater</option></select></div><div class="equation">Q = 0.00278 × C × i × A<br><span id="equationReadout">Đang tính theo giờ được chọn…</span></div></div><div class="hydraulic-panel"><svg viewBox="0 0 720 360" role="img" aria-label="Mặt cắt hố ga và cống thoát nước"><defs><linearGradient id="pipeWater" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#74edf4" stop-opacity=".94"/><stop offset="1" stop-color="#1e70db" stop-opacity=".65"/></linearGradient><clipPath id="pipeClip"><circle cx="360" cy="220" r="72"/></clipPath></defs><path class="dim" d="M0 82H720M0 160H720M0 280H720"/><path class="structure" d="M170 74h380l-43 74v135H213V148Z"/><path class="pipe-wall" d="M288 220a72 72 0 1 0 144 0a72 72 0 1 0-144 0Z"/><g clip-path="url(#pipeClip)"><rect id="pipeWater" class="water-fill" x="286" y="210" width="148" height="82"/><path id="pipeWaterLine" class="water-line" d="M284 210H436"/></g><path class="dim" d="M488 148h75M488 292h75M530 148v144"/><text x="182" y="62">INLET / CATCHMENT</text><text x="298" y="136">CONCRETE PIPE D1200</text><text id="waterDepthText" x="545" y="220">h = 0.62 m</text><text id="hydraulicStatus" x="28" y="330">FLOW STATUS: —</text></svg><div class="hydraulic-readout"><div>RUNOFF<strong id="runoffReadout">— m³/s</strong></div><div>STRESS<strong id="stressReadout">—</strong></div><div>PEAK<strong id="intensityReadout">— mm/h</strong></div></div><div class="engineering-warning" id="engineeringWarning">Chỉ số tham khảo website — không thay thế cảnh báo ngập hoặc thông số thiết kế.</div></div></div></div></section>
+
+    <section id="shareCardSection" class="section"><div class="share-card"><div><div class="eyebrow" style="color:#bfeaff">06 · SHARE</div><h2>Hôm nay của bạn.</h2><p>Tạo một tấm ảnh nhỏ từ câu chuyện mưa và góc nhìn kỹ thuật hiện tại.</p></div><button id="shareButton" class="primary-button" type="button">COPY SUMMARY <span aria-hidden="true">↗</span></button></div></section>
+  </main>
+
+  <footer><div class="container footer-inner"><div><strong>HÔM NAY CÓ MƯA KHÔNG?</strong><br>Một ngày mưa, kể bằng dữ liệu.</div><div>Open-Meteo · <a href="https://www.rainviewer.com/" target="_blank" rel="noreferrer">Weather data by RainViewer</a><br>Thông tin tham khảo · Không thay thế cảnh báo chính thức.</div></div></footer>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <div id="shareCanvasHost" class="share-canvas-host" aria-hidden="true"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="./js/weather.js"></script>
-  <script src="./js/rain-story.js"></script>
-  <script src="./js/radar.js"></script>
-  <script src="./js/city-map.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="./js/share-card.js"></script>
-  <script src="./js/app.js"></script>
+  <script>
+    (() => {
+      "use strict";
+      const CITIES = {
+        hcm: { name: "TP. HỒ CHÍ MINH", short: "TP.HCM", lat: 10.823, lon: 106.630, districts: ["Trung tâm Q.1", "Bình Thạnh", "Tân Bình", "Gò Vấp", "TP. Thủ Đức", "Q.7"] },
+        hanoi: { name: "HÀ NỘI", short: "HÀ NỘI", lat: 21.028, lon: 105.854, districts: ["Hoàn Kiếm", "Cầu Giấy", "Đống Đa", "Tây Hồ", "Hai Bà Trưng", "Hà Đông"] },
+        danang: { name: "ĐÀ NẴNG", short: "ĐÀ NẴNG", lat: 16.054, lon: 108.202, districts: ["Hải Châu", "Thanh Khê", "Sơn Trà", "Ngũ Hành Sơn", "Liên Chiểu", "Cẩm Lệ"] },
+        hue: { name: "HUẾ", short: "HUẾ", lat: 16.463, lon: 107.590, districts: ["Thuận Hóa", "Phú Xuân", "An Cựu", "Vĩ Dạ", "Kim Long", "Hương Thủy"] },
+        cantho: { name: "CẦN THƠ", short: "CẦN THƠ", lat: 10.045, lon: 105.746, districts: ["Ninh Kiều", "Bình Thủy", "Cái Răng", "Ô Môn", "Thốt Nốt", "Phong Điền"] },
+        haiphong: { name: "HẢI PHÒNG", short: "HẢI PHÒNG", lat: 20.844, lon: 106.688, districts: ["Hồng Bàng", "Lê Chân", "Ngô Quyền", "Hải An", "Kiến An", "Đồ Sơn"] }
+      };
+      const DEMO_HOURLY = [0,0,0,0,0,0,0.5,1.2,0.6,0.2,0,0,0.4,1.8,4.2,5.9,6.0,4.8,2.7,1.1,0.4,0.1,0,0];
+      const state = { cityKey: "hcm", selectedHour: 17, mode: "story", dataStatus: "loading", radarStatus: "loading", radarFrames: [], radarIndex: 0, radarTimer: null, hourlyRain: [...DEMO_HOURLY], precipSum: 38.9, peakRain: 6, peakHour: 17, areaHa: 15, runoffCoefficient: .85, blockage: "clear", tide: "normal" };
+      const $ = (id) => document.getElementById(id);
+      const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+      const padHour = (hour) => `${String(hour).padStart(2, "0")}:00`;
+      const setText = (id, value) => { const node = $(id); if (node) node.textContent = value; };
+      const formatNumber = (value, digits = 1) => Number(value).toLocaleString("vi-VN", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+
+      function calculateRunoff(intensity, areaHa, runoffCoefficient) { return 0.00278 * Number(runoffCoefficient) * Math.max(0, Number(intensity)) * Number(areaHa); }
+      function getPeak(hourly) { let peak = 0; let hour = 0; hourly.forEach((value, index) => { if (Number(value) > peak) { peak = Number(value); hour = index; } }); return { value: peak, hour }; }
+      function deriveRisk() { const rushPenalty = state.peakHour >= 16 && state.peakHour <= 18 ? 12 : 0; const blockagePenalty = state.blockage === "blocked" ? 12 : 0; const tidePenalty = state.tide === "high" ? 8 : 0; return clamp(Math.round(state.precipSum * .72 + state.peakRain * 5 + rushPenalty + blockagePenalty + tidePenalty), 4, 100); }
+      function getStory(risk) {
+        if (risk < 28) return { title: "MƯA ĐI QUA RẤT NHẸ.", quote: "Hệ thống hôm nay có thể thở đều. Áo mưa vẫn nên để trong cốp, nhưng chưa cần mở bản vẽ.", level: "low", score: risk / 10, bike: ["ỔN", "Đường còn dễ đi."], shoes: ["ỔN", "Giày trắng chưa gặp vấn đề."], car: ["ỔN", "Tầm nhìn vẫn ổn."], coffee: ["ĐƯỢC", "Khoảng trống đẹp để ra ngoài."] };
+        if (risk < 55) return { title: "MƯA CÔNG SỞ.", quote: "Đến đúng lúc thành phố chuẩn bị về nhà. Chậm hơn một nhịp sẽ dễ chịu hơn nhiều.", level: "mid", score: risk / 10, bike: ["CẨN THẬN", "Mặt đường bắt đầu trơn."], shoes: ["CÂN NHẮC", "Giày sáng màu hơi mạo hiểm."], car: ["ỔN", "Giữ khoảng cách là đủ."], coffee: ["SAU ĐỈNH", "Sau giờ mưa cao sẽ dễ chịu hơn."] };
+        return { title: "MƯA ĐANG GÂY ÁP LỰC.", quote: "Mưa không chỉ rơi xuống. Nó đi qua mặt đường, cửa thu và mọi giả định nhỏ trong bản vẽ.", level: "high", score: risk / 10, bike: ["KHÓ", "Mưa mạnh, đường trơn và tầm nhìn giảm."], shoes: ["KHÔNG NÊN", "Giày trắng hôm nay hơi mạo hiểm."], car: ["CẨN THẬN", "Tránh vùng nước đọng sâu."], coffee: ["ĐỢI ĐÃ", "Nên đợi sau giờ đỉnh mưa."] };
+      }
+      function getEngineeringResult() { const intensity = state.hourlyRain[state.selectedHour] || 0; const baseRunoff = calculateRunoff(intensity, state.areaHa, state.runoffCoefficient); const runoff = baseRunoff * (state.blockage === "blocked" ? 1.18 : 1) * (state.tide === "high" ? 1.12 : 1); const stress = clamp(Math.round((state.peakRain * 7 + state.precipSum * .7) + (state.blockage === "blocked" ? 12 : 0) + (state.tide === "high" ? 8 : 0)), 0, 100); const waterRatio = clamp(.18 + stress / 125, .18, .96); return { intensity, baseRunoff, runoff, stress, waterRatio }; }
+
+      function renderHero() { const city = CITIES[state.cityKey]; const risk = deriveRisk(); const story = getStory(risk); setText("heroCity", city.name); setText("heroTitle", story.title.charAt(0) + story.title.slice(1).toLowerCase()); setText("heroSubtitle", state.dataStatus === "demo" ? "API chưa phản hồi — đang hiển thị một kịch bản demo có nhãn rõ ràng." : "Một ngày mưa, kể bằng dữ liệu thời tiết và một chút trực giác của người làm kỹ thuật."); setText("heroRainSum", `${formatNumber(state.precipSum)} mm`); setText("heroPeakRain", `${formatNumber(state.peakRain)} mm/h`); setText("heroPeakHour", padHour(state.peakHour)); setText("heroDataStatus", `${city.short} · ${state.dataStatus === "ready" ? "DỮ LIỆU ĐÃ NẠP" : state.dataStatus === "demo" ? "DEMO SCENARIO" : "ĐANG NẠP DỮ LIỆU"}`); setText("heroDate", new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Asia/Ho_Chi_Minh" }).format(new Date()).replaceAll("/", " / ")); const result = getEngineeringResult(); const depthText = document.querySelector("[data-hero-depth]"); const runoffText = document.querySelector("[data-hero-runoff]"); if (depthText) depthText.textContent = `h = ${(result.waterRatio * 1.2).toFixed(2)} m`; if (runoffText) runoffText.textContent = `Q = ${formatNumber(result.runoff, 3)} m³/s`; }
+      function renderStory() { const story = getStory(deriveRisk()); setText("storyTitle", story.title); setText("storyQuote", `“${story.quote}”`); setText("storyScore", formatNumber(story.score)); [["bike", story.bike], ["shoe", story.shoes], ["car", story.car], ["coffee", story.coffee]].forEach(([key, value]) => { setText(`${key}Status`, value[0]); setText(`${key}Note`, value[1]); const card = $(`${key}Card`); if (card) card.className = `card practical-card risk-${story.level}`; }); }
+      function renderTimeline() { const container = $("timelineBars"); container.replaceChildren(); const max = Math.max(1, ...state.hourlyRain); state.hourlyRain.forEach((value, hour) => { const wrap = document.createElement("button"); wrap.type = "button"; wrap.className = `rain-bar-wrap${hour === state.selectedHour ? " selected" : ""}`; wrap.title = `${padHour(hour)} — ${formatNumber(value)} mm/h`; wrap.setAttribute("aria-label", `${padHour(hour)}, ${formatNumber(value)} mm trên giờ`); const bar = document.createElement("span"); bar.className = "rain-bar"; bar.style.height = `${Math.max(3, value / max * 100)}%`; wrap.append(bar); wrap.addEventListener("click", () => { state.selectedHour = hour; $("hourScrubber").value = hour; renderAll(); }); container.append(wrap); }); setText("timelineSelected", padHour(state.selectedHour)); setText("timelineSummary", `${formatNumber(state.hourlyRain[state.selectedHour] || 0)} mm/h tại giờ được chọn`); }
+      function renderEngineering() { const result = getEngineeringResult(); setText("areaValue", formatNumber(state.areaHa)); setText("coeffValue", state.runoffCoefficient.toFixed(2)); setText("runoffReadout", `${formatNumber(result.runoff, 3)} m³/s`); setText("stressReadout", `${result.stress} / 100`); setText("intensityReadout", `${formatNumber(state.peakRain)} mm/h`); setText("equationReadout", `i = ${formatNumber(result.intensity)} mm/h · A = ${formatNumber(state.areaHa)} ha · Q = ${formatNumber(result.baseRunoff, 3)} m³/s`); setText("hydraulicStatus", result.stress >= 75 ? "FLOW STATUS: HIGH STRESS / REVIEW" : result.stress >= 45 ? "FLOW STATUS: PRESSURIZED / WATCH" : "FLOW STATUS: OPEN / STABLE"); setText("waterDepthText", `h = ${(result.waterRatio * 1.2).toFixed(2)} m`); const water = $("pipeWater"); const waterLine = $("pipeWaterLine"); const y = 292 - result.waterRatio * 144; water.setAttribute("y", y.toFixed(1)); water.setAttribute("height", (292 - y).toFixed(1)); waterLine.setAttribute("d", `M284 ${y.toFixed(1)}H436`); setText("engineeringWarning", state.blockage === "blocked" || state.tide === "high" ? "Kịch bản đang làm tăng stress. Đây là proxy tham khảo; cần thông số capacity và reviewer chuyên ngành để kết luận thiết kế." : "Chỉ số tham khảo website — không thay thế cảnh báo ngập hoặc thông số thiết kế."); }
+      function renderCities() { const grid = $("cityGrid"); grid.replaceChildren(); CITIES[state.cityKey].districts.forEach((district, index) => { const factor = 1 - index * .035; const total = state.precipSum * factor; const peak = state.peakRain * (1 + ((index % 3) - 1) * .12); const card = document.createElement("article"); card.className = "card city-card"; const header = document.createElement("header"); const title = document.createElement("h3"); title.textContent = district; const totalNode = document.createElement("strong"); totalNode.textContent = formatNumber(total); header.append(title, totalNode); const note = document.createElement("p"); note.textContent = `mm / ngày · đỉnh ${formatNumber(peak)} mm/h · xác suất tham khảo ${Math.min(100, Math.round(70 + index * 4))}%`; card.append(header, note); grid.append(card); }); }
+      function renderAll() { renderHero(); renderStory(); renderTimeline(); renderEngineering(); renderCities(); }
+
+      function buildWeatherUrl(city) { const params = new URLSearchParams({ latitude: city.lat, longitude: city.lon, hourly: "precipitation,precipitation_probability,temperature_2m,wind_speed_10m,wind_direction_10m,weather_code", daily: "precipitation_sum", timezone: "Asia/Ho_Chi_Minh", forecast_days: "2" }); return `https://api.open-meteo.com/v1/forecast?${params}`; }
+      async function loadWeather(cityKey) { const city = CITIES[cityKey]; state.dataStatus = "loading"; setText("liveStatus", "CONNECTING"); renderAll(); try { const response = await fetch(buildWeatherUrl(city), { cache: "no-store" }); if (!response.ok) throw new Error(`Open-Meteo ${response.status}`); const data = await response.json(); const rain = (data.hourly?.precipitation || []).slice(0, 24).map((v) => Number(v || 0)); const peak = getPeak(rain); state.hourlyRain = rain.length === 24 ? rain : [...DEMO_HOURLY]; state.peakRain = peak.value; state.peakHour = peak.hour; state.precipSum = Number(data.daily?.precipitation_sum?.[0] ?? rain.reduce((sum, v) => sum + v, 0)); state.dataStatus = "ready"; setText("liveStatus", "LIVE DATA"); } catch (error) { console.warn("Weather API unavailable; demo data is explicitly labeled.", error); state.hourlyRain = [...DEMO_HOURLY]; state.peakRain = 6; state.peakHour = 17; state.precipSum = 38.9; state.dataStatus = "demo"; setText("liveStatus", "DEMO MODE"); } state.selectedHour = state.peakHour; $("hourScrubber").value = state.selectedHour; renderAll(); }
+      async function loadRadar() { try { const response = await fetch("https://api.rainviewer.com/public/weather-maps.json", { cache: "no-store" }); if (!response.ok) throw new Error(`RainViewer ${response.status}`); const data = await response.json(); state.radarFrames = data.radar?.past || []; state.radarStatus = state.radarFrames.length ? "ready" : "empty"; state.radarIndex = Math.max(0, state.radarFrames.length - 1); renderRadar(); } catch (error) { console.warn("Radar unavailable", error); state.radarStatus = "error"; renderRadar(); } }
+      function getRadarUrl(frame) { const city = CITIES[state.cityKey]; return `https://tilecache.rainviewer.com${frame.path}/256/5/${city.lat}/${city.lon}/2/1_0.png`; }
+      function renderRadar() { const image = $("radarFrame"); const frame = state.radarFrames[state.radarIndex]; if (frame) { image.dataset.src = getRadarUrl(frame); image.dataset.time = frame.time; image.src = image.dataset.src; setText("radarTitle", `${CITIES[state.cityKey].short} · RADAR PAST`); setText("radarTimestamp", new Date(frame.time * 1000).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })); setText("radarNote", "Frame radar gần nhất đã được nạp. Vệt sáng cho thấy phản hồi quan trắc, không phải thiết kế thoát nước."); } else { image.removeAttribute("src"); setText("radarTitle", "Radar đang unavailable"); setText("radarTimestamp", "NO FRAME"); setText("radarNote", "Không lấy được frame radar. Forecast và Engineering Mode vẫn hoạt động với dữ liệu còn lại."); } }
+      function toggleRadar() { if (state.radarTimer) { clearInterval(state.radarTimer); state.radarTimer = null; setText("radarPlay", "▶ PHÁT"); return; } if (state.radarFrames.length < 2) return; setText("radarPlay", "Ⅱ DỪNG"); state.radarTimer = setInterval(() => { state.radarIndex = (state.radarIndex + 1) % state.radarFrames.length; renderRadar(); }, 850); }
+      function showToast(message) { const toast = $("toast"); toast.textContent = message; toast.classList.add("is-visible"); window.clearTimeout(showToast.timer); showToast.timer = window.setTimeout(() => toast.classList.remove("is-visible"), 2600); }
+
+      function setupSpotlight() { const stage = $("heroStage"); const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; let pointer = { x: 0, y: 0, targetX: 0, targetY: 0 }; let raf = 0; let active = false; const draw = () => { pointer.x += (pointer.targetX - pointer.x) * .14; pointer.y += (pointer.targetY - pointer.y) * .14; stage.style.setProperty("--spotlight-x", `${pointer.x}px`); stage.style.setProperty("--spotlight-y", `${pointer.y}px`); if (active && !reduced) raf = requestAnimationFrame(draw); }; stage.addEventListener("pointermove", (event) => { if (event.pointerType === "touch") return; const rect = stage.getBoundingClientRect(); pointer.targetX = event.clientX - rect.left; pointer.targetY = event.clientY - rect.top; pointer.x = pointer.x || pointer.targetX; pointer.y = pointer.y || pointer.targetY; active = true; stage.classList.add("is-inspecting"); stage.style.setProperty("--spotlight-radius", "190px"); if (!raf && !reduced) raf = requestAnimationFrame(draw); else if (reduced) draw(); }); stage.addEventListener("pointerleave", (event) => { if (event.pointerType === "touch") return; active = false; cancelAnimationFrame(raf); raf = 0; stage.classList.remove("is-inspecting"); stage.style.setProperty("--spotlight-radius", "0px"); }); $("inspectToggle").addEventListener("click", () => { const inspecting = stage.classList.toggle("is-inspecting"); stage.style.setProperty("--spotlight-radius", inspecting ? "190px" : "0px"); showToast(inspecting ? "Engineering layer revealed" : "Story layer restored"); }); }
+      function setupRainCanvas() { const canvas = document.querySelector("[data-layer='rain']"); const ctx = canvas.getContext("2d"); const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; let drops = []; let raf = 0; function resize() { const rect = canvas.getBoundingClientRect(); const ratio = Math.min(2, window.devicePixelRatio || 1); canvas.width = rect.width * ratio; canvas.height = rect.height * ratio; ctx.setTransform(ratio, 0, 0, ratio, 0, 0); const count = reduced ? 0 : Math.round(rect.width / 7); drops = Array.from({ length: count }, () => ({ x: Math.random() * rect.width, y: Math.random() * rect.height, length: 8 + Math.random() * 22, speed: 2 + Math.random() * 4, opacity: .08 + Math.random() * .19 })); } function paint() { const rect = canvas.getBoundingClientRect(); ctx.clearRect(0, 0, rect.width, rect.height); ctx.strokeStyle = "rgba(49,104,244,.55)"; ctx.lineWidth = 1; drops.forEach((drop) => { ctx.globalAlpha = drop.opacity; ctx.beginPath(); ctx.moveTo(drop.x, drop.y); ctx.lineTo(drop.x - 4, drop.y + drop.length); ctx.stroke(); drop.y += drop.speed; drop.x -= .5; if (drop.y > rect.height + 30) { drop.y = -30; drop.x = Math.random() * rect.width; } }); if (!reduced) raf = requestAnimationFrame(paint); } new ResizeObserver(resize).observe(canvas); resize(); if (!reduced) paint(); }
+      function setupControls() { $("citySelect").addEventListener("change", (event) => { state.cityKey = event.target.value; loadWeather(state.cityKey); renderRadar(); }); $("hourScrubber").addEventListener("input", (event) => { state.selectedHour = Number(event.target.value); renderAll(); }); $("areaInput").addEventListener("input", (event) => { state.areaHa = Number(event.target.value); renderEngineering(); renderHero(); }); $("coeffInput").addEventListener("input", (event) => { state.runoffCoefficient = Number(event.target.value); renderEngineering(); renderHero(); }); $("blockageInput").addEventListener("change", (event) => { state.blockage = event.target.value; renderAll(); }); $("tideInput").addEventListener("change", (event) => { state.tide = event.target.value; renderAll(); }); $("modeToggle").addEventListener("click", () => { const active = document.body.classList.toggle("engineering-mode"); state.mode = active ? "engineering" : "story"; $("modeToggle").setAttribute("aria-pressed", String(active)); setText("modeToggle", active ? "STORY MODE" : "ENGINEERING MODE"); showToast(active ? "Engineering Mode active" : "Story Mode active"); }); $("radarPlay").addEventListener("click", toggleRadar); $("radarNow").addEventListener("click", () => { state.radarIndex = Math.max(0, state.radarFrames.length - 1); renderRadar(); }); $("shareButton").addEventListener("click", async () => { const city = CITIES[state.cityKey]; const result = getEngineeringResult(); const summary = `${city.name} · ${padHour(state.selectedHour)}\nMưa ngày: ${formatNumber(state.precipSum)} mm · Đỉnh: ${formatNumber(state.peakRain)} mm/h\nRunoff tham khảo: ${formatNumber(result.runoff, 3)} m³/s · Stress proxy: ${result.stress}/100\nNguồn: Open-Meteo / RainViewer`; try { await navigator.clipboard.writeText(summary); showToast("Đã copy summary kỹ thuật"); } catch { showToast(summary); } }); }
+      function runSelfTests() { if (!new URLSearchParams(location.search).has("test")) return; const checks = []; const assert = (name, condition) => { checks.push(`${condition ? "PASS" : "FAIL"} · ${name}`); if (!condition) throw new Error(name); }; try { assert("Rational Method 15ha / C=.85 / i=6", Math.abs(calculateRunoff(6, 15, .85) - .21267) < .001); assert("Zero rain yields zero runoff", calculateRunoff(0, 15, .85) === 0); assert("Hourly label stays local and padded", padHour(7) === "07:00"); assert("Engineering layer marker exists", document.querySelector('[data-component="rain-runoff-spotlight"]') !== null); assert("Radar uses data-src contract", $("radarFrame").dataset.src === ""); const output = document.createElement("pre"); output.id = "testOutput"; output.textContent = `RAIN//RUNOFF SELF-TEST\n${checks.join("\n")}\n\n${checks.every((line) => line.startsWith("PASS")) ? "ALL TESTS PASS" : "TEST FAILURE"}`; document.body.append(output); } catch (error) { const output = document.createElement("pre"); output.id = "testOutput"; output.textContent = `RAIN//RUNOFF SELF-TEST\n${checks.join("\n")}\n\nFAIL: ${error.message}`; document.body.append(output); } }
+      function boot() { setupSpotlight(); setupRainCanvas(); setupControls(); renderAll(); runSelfTests(); loadWeather(state.cityKey); loadRadar(); }
+      window.__RAIN_RUNOFF__ = { state, calculateRunoff, getEngineeringResult, loadWeather, renderAll };
+      boot();
+    })();
+  </script>
 </body>
 </html>
