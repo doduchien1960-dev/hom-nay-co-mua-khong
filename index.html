@@ -1,524 +1,924 @@
 <!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="color-scheme" content="dark" />
-  <link rel="icon" href="data:," />
-  <title>Mưa Sài Gòn — Một ngày, bốn hồi</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&family=Space+Mono:wght@400;700&display=swap&subset=vietnamese" rel="stylesheet" />
-  <style>
-    :root {
-      --bg: #030509;
-      --ink: #f3f7fb;
-      --ink-dim: rgba(243,247,251,.62);
-      --accent: #91dcff;
-      --hair: rgba(243,247,251,.18);
-      --ease: cubic-bezier(.22,1,.36,1);
-      --pad: clamp(20px,4.4vw,72px);
-      --display: "Be Vietnam Pro",sans-serif;
-      --mono: "Space Mono",monospace;
-      --sky: #070b12;
-      color-scheme: dark;
-    }
-    * { box-sizing: border-box; }
-    html { background: var(--bg); scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      min-width: 320px;
-      overflow-x: clip;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: var(--display);
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
-      transition: background 1s var(--ease);
-    }
-    button,input { font: inherit; }
-    button { color: inherit; }
-    :focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
-    .sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0; }
-
-    .grain { position:fixed;inset:0;z-index:90;pointer-events:none;opacity:.065;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.9'/%3E%3C/svg%3E");mix-blend-mode:soft-light; }
-    .vignette { position:fixed;inset:0;z-index:89;pointer-events:none;box-shadow:inset 0 0 16vw rgba(0,0,0,.44); }
-
-    .preloader { position:fixed;inset:0;z-index:200;display:grid;align-content:space-between;padding:max(26px,env(safe-area-inset-top)) var(--pad) max(28px,env(safe-area-inset-bottom));background:#010204;transition:opacity .6s var(--ease),visibility .6s var(--ease); }
-    .preloader.done { opacity:0;visibility:hidden; }
-    #loaderRain { position:absolute;inset:0;width:100%;height:100%;opacity:.42; }
-    .loader-top,.loader-bottom { position:relative;z-index:1;display:flex;justify-content:space-between;gap:20px;font:10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-dim); }
-    .loader-center { position:relative;z-index:1;align-self:center; }
-    .loader-count { font:700 clamp(82px,20vw,310px)/.78 var(--display);letter-spacing:-.1em;font-variant-numeric:tabular-nums; }
-    .loader-count small { font:400 13px var(--mono);letter-spacing:.04em;color:var(--accent); }
-    .loader-line { margin-top:28px;width:min(460px,70vw);height:1px;background:rgba(255,255,255,.18);overflow:hidden; }
-    .loader-line span { display:block;height:100%;width:100%;transform:scaleX(0);transform-origin:left;background:var(--accent);box-shadow:0 0 18px var(--accent); }
-    .preloader.flash::after { content:"";position:absolute;inset:0;background:white;animation:loader-flash .22s linear; }
-    @keyframes loader-flash { 0%,100%{opacity:0} 35%{opacity:.95} }
-
-    .utility { position:fixed;z-index:105;top:max(16px,env(safe-area-inset-top));right:max(18px,env(safe-area-inset-right));display:flex;align-items:center;gap:10px; }
-    .sound-toggle { border:1px solid rgba(255,255,255,.2);background:rgba(3,7,12,.58);backdrop-filter:blur(15px);padding:10px 13px;font:9px var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:border-color .3s,background .3s; }
-    .sound-toggle[aria-pressed="true"] { border-color:var(--accent);background:rgba(8,25,36,.72); }
-    .sound-bars { display:inline-flex;align-items:end;gap:2px;height:10px;margin-left:8px; }
-    .sound-bars i { width:2px;height:3px;background:currentColor;transform-origin:bottom; }
-    .sound-toggle[aria-pressed="true"] .sound-bars i { animation:sound-bar .55s ease-in-out infinite alternate; }
-    .sound-toggle[aria-pressed="true"] .sound-bars i:nth-child(2){animation-delay:-.22s}.sound-toggle[aria-pressed="true"] .sound-bars i:nth-child(3){animation-delay:-.38s}
-    .sound-toggle[data-mode="music"] { border-color:#d9c6ff;background:rgba(25,14,42,.76);box-shadow:inset 0 0 18px rgba(189,171,255,.08); }
-    .sound-toggle[data-mode="music"] .sound-bars i { background:#d9c6ff; }
-    @keyframes sound-bar { to{height:10px} }
-
-    .wind-rain { position:fixed;inset:0;z-index:87;width:100%;height:100%;pointer-events:none;mix-blend-mode:screen;opacity:.72; }
-    .cursor-ring,.cursor-dot { position:fixed;left:0;top:0;z-index:160;pointer-events:none;opacity:0; }
-    .cursor-ring { width:28px;height:28px;border:1px solid rgba(183,231,255,.82);border-radius:50% 50% 55% 45% / 55% 45% 55% 45%;transform:translate3d(-50%,-50%,0) rotate(45deg);transition:width .25s var(--ease),height .25s var(--ease),border-color .25s;mix-blend-mode:difference; }
-    .cursor-dot { width:4px;height:4px;border-radius:50%;background:var(--ink);transform:translate3d(-50%,-50%,0);transition:opacity .2s; }
-    .cursor-ring.hover { width:45px;height:45px;border-color:white; }
-    .cursor-ripple { position:fixed;z-index:159;width:18px;height:18px;border:1px solid var(--accent);border-radius:50%;pointer-events:none;transform:translate(-50%,-50%) scale(.4);animation:ripple .72s var(--ease) forwards; }
-    @keyframes ripple { to{opacity:0;transform:translate(-50%,-50%) scale(5)} }
-    @media (pointer:fine) { body.cursor-ready,body.cursor-ready a,body.cursor-ready button,body.cursor-ready [role="slider"],body.cursor-ready [role="button"]{cursor:none}.cursor-ring,.cursor-dot{opacity:1} }
-
-    .chapter-rail { position:fixed;z-index:100;top:50%;right:max(14px,env(safe-area-inset-right));transform:translateY(-50%);display:grid;gap:9px; }
-    .rail-dot { width:4px;height:20px;border:0;padding:0;border-radius:99px;background:rgba(255,255,255,.24);cursor:pointer;transition:height .45s var(--ease),background .45s var(--ease); }
-    .rail-dot[aria-current="true"] { height:46px;background:var(--accent);box-shadow:0 0 14px var(--accent); }
-    .time-axis { position:fixed;z-index:99;right:max(2px,env(safe-area-inset-right));top:24%;height:52%;width:50px;color:rgba(243,247,251,.36);font:10px var(--mono);letter-spacing:.03em; }
-    .time-axis-line { position:absolute;right:4px;top:0;bottom:0;width:1px;background:rgba(243,247,251,.15); }
-    .time-axis-fill { position:absolute;right:4px;top:0;width:1px;height:var(--time-progress,0%);background:var(--accent);box-shadow:0 0 9px var(--accent); }
-    .time-axis-orb { position:absolute;right:1px;top:var(--time-progress,0%);width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);transform:translateY(-50%);transition:top .12s linear; }
-    .time-mark { position:absolute;right:9px;min-width:38px;text-align:right;transform:translateY(-50%);border:0;padding:4px 7px 4px 4px;background:transparent;color:inherit;font:inherit;cursor:pointer;overflow:visible;transition:color .3s var(--ease),transform .3s var(--ease); }
-    .time-mark::after { content:"";position:absolute;right:-5px;top:50%;width:4px;height:1px;background:currentColor; }
-    .time-mark:hover,.time-mark:focus-visible,.time-mark.active { color:var(--ink);transform:translate(-3px,-50%); }
-    .time-mark:nth-of-type(1){top:0}.time-mark:nth-of-type(2){top:46.15%}.time-mark:nth-of-type(3){top:69.23%}.time-mark:nth-of-type(4){top:100%}
-    .magnetic { will-change:transform; }
-
-    .white-flash { position:fixed;inset:0;z-index:140;background:#fff;opacity:0;pointer-events:none;mix-blend-mode:screen; }
-    .white-flash.flash { animation:white-flash 180ms linear; }
-    @keyframes white-flash { 0%,100%{opacity:0} 32%{opacity:.92} }
-    .letterbox { position:fixed;z-index:130;left:0;right:0;height:7vh;background:#000;pointer-events:none;transform:scaleY(0); }
-    .letterbox.top { top:0;transform-origin:top }.letterbox.bottom{bottom:0;transform-origin:bottom}
-    .letterbox.cut { animation:letterbox-cut .82s var(--ease); }
-    @keyframes letterbox-cut { 0%,100%{transform:scaleY(0)} 43%,57%{transform:scaleY(1)} }
-
-    .cold-open { --aperture-x:72%;--aperture-y:38%;--aperture-size:22%;min-height:100svh;display:grid;align-content:space-between;padding:max(24px,env(safe-area-inset-top)) var(--pad) max(28px,env(safe-area-inset-bottom));position:relative;isolation:isolate;background:#020308;overflow:hidden;perspective:1000px; }
-    .cold-open::before { content:"";position:absolute;inset:0;z-index:-1;background:repeating-linear-gradient(90deg,transparent 0 calc(25% - 1px),rgba(255,255,255,.055) calc(25% - 1px) 25%); }
-    .cold-media { position:absolute;inset:-6%;z-index:-4;clip-path:circle(var(--aperture-size) at var(--aperture-x) var(--aperture-y));transition:clip-path .7s var(--ease);will-change:clip-path,transform;transform:translate3d(var(--cold-x,0),var(--cold-y,0),0) scale(1.08); }
-    .cold-media video { width:100%;height:100%;object-fit:cover;filter:saturate(.7) contrast(1.14) brightness(.72); }
-    .cold-media::after { content:"";position:absolute;inset:0;background:linear-gradient(100deg,rgba(1,3,7,.82),rgba(1,3,7,.08) 55%,rgba(1,3,7,.55)),radial-gradient(circle at var(--aperture-x) var(--aperture-y),transparent,rgba(1,3,7,.34) 54%); }
-    .aperture { position:absolute;z-index:-2;left:var(--aperture-x);top:var(--aperture-y);width:min(58vw,760px);aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none; }
-    .aperture-ring { position:absolute;inset:var(--ring-inset);border:1px solid rgba(174,226,250,var(--ring-alpha));border-radius:50%;animation:aperture-drift var(--ring-time) linear infinite; }
-    .aperture-ring::before,.aperture-ring::after { content:"";position:absolute;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 18px var(--accent); }
-    .aperture-ring::before { left:8%;top:27%; }.aperture-ring::after { right:11%;bottom:24%;width:3px;height:3px; }
-    .aperture-ring:nth-child(1){--ring-inset:0%;--ring-alpha:.2;--ring-time:24s}.aperture-ring:nth-child(2){--ring-inset:13%;--ring-alpha:.34;--ring-time:17s;animation-direction:reverse}.aperture-ring:nth-child(3){--ring-inset:27%;--ring-alpha:.18;--ring-time:11s}
-    .aperture-cross { position:absolute;inset:42%;border:1px solid rgba(255,255,255,.25);border-radius:50%;box-shadow:0 0 70px rgba(117,210,255,.18); }
-    @keyframes aperture-drift { to{transform:rotate(1turn)} }
-    .storm-status { position:absolute;z-index:2;right:var(--pad);top:15%;display:grid;grid-template-columns:auto auto;gap:4px 12px;padding:12px 0;border-block:1px solid rgba(255,255,255,.13);font:9px/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim); }
-    .storm-status b { color:var(--accent);font-weight:400;text-align:right; }
-    .cold-title { transform:translate3d(var(--title-x,0),var(--title-y,0),0) rotateX(var(--title-rx,0deg)) rotateY(var(--title-ry,0deg));transform-style:preserve-3d;will-change:transform;text-shadow:0 18px 44px rgba(114,206,248,.16); }
-    .dateline,.act-kicker,.micro,.district-eyebrow,.day-result { font-family:var(--mono);text-transform:uppercase;letter-spacing:.09em;font-size:clamp(10px,.84vw,13px); }
-    .dateline { color:var(--ink-dim);display:flex;justify-content:space-between;gap:16px; }
-    .dateline span:last-child { color:var(--accent); }
-    .cold-title { margin:auto 0;font-size:clamp(52px,10.7vw,174px);line-height:.84;letter-spacing:-.075em;font-weight:800;text-transform:uppercase; }
-    .mask-line,.reveal-line { display:block;overflow:hidden;padding-bottom:.11em; }
-    .mask-line>span { display:block;transform:translateY(115%);filter:blur(8px);animation:title-in 1.15s var(--ease) .15s forwards; }
-    .mask-line:nth-child(2)>span{animation-delay:.24s}
-    @keyframes title-in { to{transform:translateY(0);filter:blur(0)} }
-    .cold-bottom { display:flex;align-items:flex-end;justify-content:space-between;gap:24px; }
-    .cold-note { color:var(--ink-dim);max-width:34ch;font-size:13px;line-height:1.6; }
-    .hold-rain { --charge:0deg;display:inline-flex;align-items:center;gap:13px;min-height:56px;border:0;padding:0;background:transparent;font:11px var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;touch-action:manipulation; }
-    .hold-ring { width:50px;height:50px;display:grid;place-items:center;position:relative;border-radius:50%;background:conic-gradient(var(--accent) var(--charge),rgba(255,255,255,.16) 0);box-shadow:0 0 calc(var(--charge)/7) rgba(127,212,255,.2); }
-    .hold-ring::before { content:"";position:absolute;inset:2px;border-radius:50%;background:#080b11; }
-    .hold-ring span { position:relative;font-size:16px;transform:translateY(-1px); }
-    .hold-rain.charging .hold-ring span { animation:charge-pulse .38s ease-in-out infinite alternate; }
-    @keyframes charge-pulse { to{transform:translateY(-1px) scale(1.22);color:var(--accent)} }
-
-    .act { position:relative;min-height:155svh;background:var(--bg); }
-    .scene { position:sticky;top:0;height:100svh;overflow:hidden;isolation:isolate;background:var(--sky); }
-    .sky,.media-stack,.media-layer,.cloud-layer,.scene-shade,.spotlight,.rain-veil,.lightning { position:absolute;inset:0; }
-    .sky { z-index:-7;transition:background 1.2s var(--ease); }
-    #act1 .sky { background:linear-gradient(160deg,#6f7c83 0%,#27323b 42%,#0a1119 100%); }
-    #act2 .sky { background:linear-gradient(155deg,#3c454f 0%,#151b25 48%,#07101b 100%); }
-    #act3 .sky { background:linear-gradient(145deg,#342d49 0%,#111827 42%,#03060c 100%); }
-    #act4 .sky { background:radial-gradient(circle at 74% 26%,#203044 0%,#0a111c 22%,#020307 62%); }
-    .media-stack { z-index:-5;transform:translate3d(var(--camera-x,0),var(--camera-y,0),0) scale(var(--scene-scale,1.08));filter:blur(var(--scene-blur,8px));will-change:transform,filter; }
-    .media-layer { width:100%;height:100%;object-fit:cover;opacity:.82; }
-    .cloud-layer { z-index:-3;background:radial-gradient(ellipse at calc(30% + var(--cloud-x,0px)) calc(26% + var(--cloud-y,0px)),rgba(214,232,242,.13),transparent 28%),radial-gradient(ellipse at calc(74% - var(--cloud-x,0px)) 53%,rgba(21,32,49,.72),transparent 42%);transform:translate3d(calc(var(--camera-x,0)*-.35),calc(var(--camera-y,0)*-.2),0) scale(1.1);mix-blend-mode:screen; }
-    .scene-shade { z-index:-2;background:linear-gradient(180deg,rgba(2,4,8,.31),rgba(2,4,8,.03) 42%,rgba(2,4,8,.7)),linear-gradient(90deg,rgba(2,4,8,.7),rgba(2,4,8,.08) 56%,rgba(2,4,8,.3)); }
-    .rain-veil { z-index:-1;opacity:var(--rain-opacity,.15);background-image:repeating-linear-gradient(107deg,transparent 0 18px,rgba(191,229,250,.21) 19px,transparent 20px 46px);background-size:170% 170%;animation:rain-pass 1.15s linear infinite;mix-blend-mode:screen; }
-    @keyframes rain-pass { from{background-position:0 -20vh}to{background-position:-12vw 80vh} }
-    .scene::before { content:"";position:absolute;inset:0;z-index:4;pointer-events:none;background:linear-gradient(110deg,transparent 18%,rgba(204,239,255,.09) 49.5%,transparent 51%);transform:translateX(var(--scan-x,-120%));mix-blend-mode:screen;will-change:transform; }
-    .scene-frame { position:absolute;z-index:5;inset:clamp(12px,1.65vw,26px);clip-path:inset(var(--scene-inset,8%));border:1px solid rgba(218,241,252,.16);pointer-events:none;transition:clip-path .16s linear; }
-    .scene-frame::before,.scene-frame::after { content:"";position:absolute;left:50%;width:1px;height:14px;background:var(--accent);box-shadow:0 0 12px var(--accent); }
-    .scene-frame::before{top:-1px}.scene-frame::after{bottom:-1px}
-    .scene-code { position:absolute;z-index:6;right:clamp(22px,3vw,46px);bottom:clamp(20px,3vw,44px);display:flex;align-items:center;gap:9px;font:8px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(243,247,251,.48);pointer-events:none; }
-    .scene-code i { width:34px;height:1px;background:var(--accent);transform:scaleX(var(--chapter-progress,.1));transform-origin:left;box-shadow:0 0 8px var(--accent); }
-    .scene-ticks { position:absolute;z-index:5;left:clamp(18px,2.6vw,40px);top:50%;width:36px;height:45%;transform:translateY(-50%);opacity:.42;pointer-events:none;background:repeating-linear-gradient(180deg,rgba(224,244,255,.8) 0 1px,transparent 1px 22px);mask-image:linear-gradient(transparent,#000 14%,#000 86%,transparent); }
-    .act-shell { position:relative;z-index:7;height:100%;padding:max(28px,env(safe-area-inset-top)) var(--pad) max(30px,env(safe-area-inset-bottom));display:grid;grid-template-rows:auto 1fr auto; }
-    .act-top { display:flex;justify-content:space-between;gap:20px;align-items:flex-start; }
-    .act-kicker { color:var(--accent); }
-    .chapter-num { font:11px var(--mono);letter-spacing:.12em;color:var(--ink-dim); }
-    .act-title-wrap { align-self:center;max-width:95%; }
-    .act-title { margin:0;max-width:8ch;font-size:clamp(58px,11.4vw,186px);line-height:.83;letter-spacing:-.075em;font-weight:800;text-transform:uppercase;text-wrap:balance; }
-    .act-title.is-peak { font-size:clamp(128px,26vw,420px);max-width:none;letter-spacing:-.1em; }
-    .reveal-line>span { display:block;transform:translateY(115%);filter:blur(8px);transition:transform 1.1s var(--ease),filter 1.1s var(--ease); }
-    .act.in-view .reveal-line>span { transform:none;filter:none; }.act.in-view .reveal-line:nth-child(2)>span{transition-delay:90ms}
-    .act-bottom { display:flex;align-items:flex-end;justify-content:space-between;gap:24px; }
-    .metrics { display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 22px;font-family:var(--mono);font-size:clamp(12px,1.3vw,18px);letter-spacing:.04em; }
-    .metrics strong { font-size:clamp(24px,3.2vw,48px);color:var(--accent); }
-    .odometer { display:inline-flex;align-items:baseline;white-space:nowrap;overflow:hidden; }.odo-number{display:inline-block;min-width:1ch;font-variant-numeric:tabular-nums}.odometer.rolling .odo-number{animation:odo-roll .62s var(--ease)}
-    @keyframes odo-roll { from{transform:translateY(105%);filter:blur(6px);opacity:0}to{transform:none;filter:none;opacity:1} }
-    .act-caption { max-width:30ch;color:var(--ink-dim);font-size:13px;line-height:1.6;text-align:right; }
-    .burst { transform:translateY(20px);opacity:0;transition:transform .9s .28s var(--ease),opacity .9s .28s var(--ease); }.act.in-view .burst{transform:none;opacity:1}
-    .portal-ring { position:absolute;left:50%;top:50%;width:min(60vw,780px);aspect-ratio:1.55;transform:translate(-50%,-50%) scale(calc(.75 + var(--portal,0)*.34));border:1px solid rgba(220,242,255,calc(.05 + var(--portal,0)*.28));border-radius:50%;box-shadow:0 0 calc(100px*var(--portal,0)) rgba(127,212,255,.15),inset 0 0 calc(110px*var(--portal,0)) rgba(127,212,255,.1);opacity:calc(.1 + var(--portal,0)*.9);pointer-events:none; }
-    .act-peak { --rain-opacity:.34; }.act-peak .scene-shade{background:linear-gradient(180deg,rgba(2,4,8,.13),rgba(2,4,8,.18) 45%,rgba(2,4,8,.76)),linear-gradient(90deg,rgba(2,4,8,.55),transparent 58%)}
-    .spotlight { z-index:-1;opacity:0;background:radial-gradient(circle 310px at var(--spot-x,50%) var(--spot-y,50%),rgba(176,224,248,.23),transparent 70%);mix-blend-mode:screen;transition:opacity .4s;pointer-events:none; }
-    @media(pointer:fine){.act-peak:hover .spotlight{opacity:1}}
-    .lightning { z-index:6;opacity:0;pointer-events:none;background:rgba(218,239,255,.86);mix-blend-mode:screen; }.lightning.flash{animation:storm-flash .45s ease-out}
-    @keyframes storm-flash { 0%{opacity:0}10%{opacity:.88}18%{opacity:.06}28%{opacity:.52}100%{opacity:0} }
-    .strike-svg { position:absolute;inset:0;z-index:8;width:100%;height:100%;pointer-events:none;overflow:visible; }.strike-svg polyline{fill:none;stroke:#ecf9ff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 9px #86d8ff);opacity:0}.strike-svg.strike polyline{animation:pointer-strike .48s ease-out}
-    .strike-svg polyline.branch { stroke-width:1.5; }.strike-svg polyline:nth-child(2){animation-delay:18ms}.strike-svg polyline:nth-child(3){animation-delay:28ms}.strike-svg polyline:nth-child(4){animation-delay:34ms}
-    @keyframes pointer-strike { 0%{opacity:0;stroke-dasharray:1 1000}9%{opacity:1;stroke-dasharray:1000 0}52%{opacity:.9}100%{opacity:0} }
-    .act-peak.shock .scene { animation:scene-shock 100ms linear; }.act-peak.shock .metrics{animation:metrics-flicker .36s steps(2,end)}
-    @keyframes scene-shock { 0%,100%{transform:none}25%{transform:translate(-4px,2px)}55%{transform:translate(4px,-2px)}80%{transform:translate(-2px,1px)} }
-    @keyframes metrics-flicker { 0%,100%{opacity:1}35%{opacity:.12}60%{opacity:.82} }
-
-    .marquee { height:clamp(112px,15vw,220px);display:flex;align-items:center;overflow:hidden;background:#020306;border-block:1px solid rgba(255,255,255,.13);position:relative;z-index:2; }
-    .marquee::before,.marquee::after { content:"";position:absolute;top:0;bottom:0;width:14vw;z-index:2;pointer-events:none; }.marquee::before{left:0;background:linear-gradient(90deg,#020306,transparent)}.marquee::after{right:0;background:linear-gradient(-90deg,#020306,transparent)}
-    .marquee-track { display:flex;width:max-content;white-space:nowrap;will-change:transform;font-size:clamp(70px,10.5vw,168px);font-weight:800;line-height:.8;letter-spacing:-.06em;text-transform:uppercase;color:transparent;-webkit-text-stroke:1px rgba(215,239,251,.5); }
-    .marquee-track span { padding-right:.25em; }
-
-    .act-final { min-height:210svh; }.final-scene .scene-shade{background:linear-gradient(180deg,rgba(2,4,8,.38),rgba(2,4,8,.2) 44%,rgba(2,4,8,.86))}.recap-video{opacity:0;transition:opacity .8s var(--ease)}.recap-video.active{opacity:.62}
-    #starfield { position:absolute;inset:0;z-index:-4;width:100%;height:100%;opacity:.72; }.moon { position:absolute;z-index:-3;right:12vw;top:15vh;width:clamp(90px,14vw,220px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 38% 33%,#e8f3f4,#99aab2 45%,#495761 70%,transparent 71%);opacity:.38;filter:blur(.3px);box-shadow:0 0 80px rgba(199,230,239,.16); }.moon::after{content:"";position:absolute;inset:-30%;background:radial-gradient(ellipse at 40% 50%,rgba(22,31,43,.72),transparent 56%);transform:translateX(20%);}
-    .eye-stage { align-self:center;display:grid;grid-template-columns:minmax(0,.7fr) minmax(340px,1.3fr);gap:clamp(28px,7vw,110px);align-items:center; }
-    .eye-copy .act-title { font-size:clamp(52px,8vw,130px);max-width:8ch; }.day-result{margin-top:22px;color:var(--ink-dim)}.day-result strong{display:block;margin-top:10px;color:var(--ink);font:600 clamp(25px,3vw,48px)/1.05 var(--display);letter-spacing:-.04em;text-transform:none}
-    .storm-eye-wrap { position:relative;width:min(70vh,620px);max-width:100%;aspect-ratio:1;margin-inline:auto;display:grid;place-items:center; }
-    .storm-eye-halo { position:absolute;inset:3%;border-radius:50%;background:conic-gradient(from 220deg,transparent,rgba(110,190,230,.14),transparent 33%,rgba(170,219,242,.09),transparent 65%);filter:blur(13px);animation:halo-spin 16s linear infinite; }
-    @keyframes halo-spin { to{transform:rotate(1turn)} }
-    .storm-eye { position:relative;width:100%;height:100%;touch-action:none;user-select:none;cursor:grab;filter:drop-shadow(0 24px 80px rgba(0,0,0,.35)); }.storm-eye:active{cursor:grabbing}.storm-eye svg{width:100%;height:100%;overflow:visible}.radar-ring{fill:none;stroke:rgba(255,255,255,.13);stroke-width:1}.radar-ring.inner{stroke-dasharray:3 8}.radar-spokes{transform-origin:250px 250px;will-change:transform}.radar-spoke{stroke:rgba(220,240,250,.42);stroke-width:4;stroke-linecap:round;stroke-dasharray:180;stroke-dashoffset:180;opacity:.46;transition:stroke-dashoffset .8s var(--ease),opacity .35s,stroke .35s,stroke-width .35s}.storm-eye.drawn .radar-spoke{stroke-dashoffset:0}.radar-spoke.active{stroke:var(--accent);stroke-width:8;opacity:1;filter:drop-shadow(0 0 8px var(--accent))}.radar-hour{fill:rgba(255,255,255,.56);font:8px var(--mono);text-anchor:middle;dominant-baseline:middle}.radar-hour.active{fill:var(--accent)}
-    .eye-readout { position:absolute;inset:0;display:grid;place-content:center;text-align:center;pointer-events:none;max-width:58%;margin:auto; }.eye-hour{font:10px var(--mono);letter-spacing:.12em;color:var(--accent);text-transform:uppercase}.eye-percent{font:800 clamp(68px,9vw,132px)/.85 var(--display);letter-spacing:-.09em;font-variant-numeric:tabular-nums}.eye-percent small{font:400 19px var(--mono);letter-spacing:0}.eye-rain{margin-top:9px;font:11px var(--mono);letter-spacing:.08em;color:var(--ink-dim)}.eye-poem{min-height:3.2em;margin:13px 0 0;font-size:clamp(11px,1.05vw,15px);line-height:1.45;letter-spacing:-.01em;color:rgba(243,247,251,.78);text-wrap:balance;transition:opacity .22s var(--ease),filter .22s var(--ease),transform .22s var(--ease)}.eye-poem.changing{opacity:0;filter:blur(7px);transform:translateY(6px)}.eye-hint{position:absolute;bottom:3%;left:50%;transform:translateX(-50%);white-space:nowrap;font:9px var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--ink-dim)}
-
-    .storm-core { position:relative;min-height:125svh;background:radial-gradient(circle at 50% 42%,rgba(27,58,107,.24),transparent 36%),#02050a;isolation:isolate; }
-    .storm-core-scene { position:sticky;top:0;height:100svh;overflow:hidden;display:grid;grid-template-rows:auto 1fr auto;padding:max(24px,env(safe-area-inset-top)) var(--pad) max(24px,env(safe-area-inset-bottom)); }
-    .storm-core-scene::before { content:"";position:absolute;inset:0;z-index:-3;background:radial-gradient(circle at 50% 46%,rgba(79,154,202,.11),transparent 29%),linear-gradient(180deg,#02050a,#050b14 58%,#020408); }
-    .storm-core-scene::after { content:"";position:absolute;inset:0;z-index:8;pointer-events:none;background:linear-gradient(90deg,rgba(1,3,7,.56),transparent 24% 76%,rgba(1,3,7,.56)),linear-gradient(180deg,rgba(1,3,7,.24),transparent 24% 70%,rgba(1,3,7,.78)); }
-    .storm-core-top { position:relative;z-index:12;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;font:10px var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--ink-dim); }
-    .storm-core-top strong { color:var(--accent);font-weight:400; }
-    .storm-sphere-stage { position:relative;z-index:4;align-self:center;justify-self:center;width:min(76vw,840px);height:min(72vh,760px);display:grid;place-items:center;perspective:1100px;touch-action:none;user-select:none; }
-    .storm-sphere-stage::before { content:"";position:absolute;width:72%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(111,204,249,.16),rgba(34,93,145,.06) 44%,transparent 72%);filter:blur(22px);opacity:calc(.34 + var(--storm-intensity,.2)*.52);transform:scale(calc(.88 + var(--storm-intensity,.2)*.2));transition:opacity .35s,transform .35s; }
-    #stormSphereCanvas { position:absolute;inset:0;width:100%;height:100%;z-index:1;filter:drop-shadow(0 0 28px rgba(91,193,241,.22)); }
-    .storm-sphere-gesture { position:absolute;z-index:6;inset:4%;border-radius:50%;touch-action:none;cursor:grab; }
-    .storm-sphere-gesture:active { cursor:grabbing; }
-    .storm-core-copy { position:relative;z-index:4;text-align:center;pointer-events:none;transform-style:preserve-3d;will-change:transform; }
-    .storm-core-copy h2 { margin:0;font-size:clamp(150px,25vw,390px);font-weight:800;line-height:.72;letter-spacing:-.12em;text-transform:uppercase;text-shadow:0 24px 75px rgba(0,0,0,.42),0 0 34px rgba(145,220,255,.13); }
-    .storm-core-copy p { margin:clamp(22px,4vh,42px) auto 0;max-width:36ch;font:10px/1.65 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:rgba(243,247,251,.62); }
-    .storm-core-copy p span { color:var(--accent); }
-    .storm-orbit-label { position:absolute;z-index:3;border:1px solid rgba(184,229,249,.18);border-radius:50%;inset:8%;animation:storm-orbit 23s linear infinite;pointer-events:none; }
-    .storm-orbit-label::before,.storm-orbit-label::after { position:absolute;top:50%;padding:4px 8px;background:#03070d;color:rgba(214,239,251,.58);font:8px var(--mono);letter-spacing:.12em;text-transform:uppercase; }
-    .storm-orbit-label::before { content:"Mắt bão / tương tác";left:-42px;transform:translateY(-50%) rotate(-90deg); }
-    .storm-orbit-label::after { content:"900 điểm / Fibonacci";right:-55px;transform:translateY(-50%) rotate(90deg); }
-    @keyframes storm-orbit { to{transform:rotate(1turn)} }
-    .storm-core.webgl-fallback .storm-sphere-stage::before { width:min(72%,560px);background:radial-gradient(circle at 38% 34%,rgba(232,249,255,.9),rgba(88,184,230,.48) 12%,rgba(27,58,107,.92) 39%,rgba(3,9,18,.98) 70%);filter:none;box-shadow:inset -38px -25px 90px rgba(0,0,0,.58),0 0 80px rgba(95,195,241,.2);opacity:1; }
-    .storm-shockwave { position:absolute;z-index:9;width:18px;height:18px;border:1px solid rgba(218,244,255,.95);border-radius:50%;pointer-events:none;transform:translate(-50%,-50%) scale(.2);animation:storm-shockwave .72s var(--ease) forwards;box-shadow:0 0 24px rgba(127,212,255,.65); }
-    @keyframes storm-shockwave { to{opacity:0;transform:translate(-50%,-50%) scale(14)} }
-    .storm-core-strike { position:absolute;inset:0;z-index:10;width:100%;height:100%;pointer-events:none;overflow:visible; }
-    .storm-core-strike polyline { fill:none;stroke:#effbff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 9px #79d7ff);opacity:0; }
-    .storm-core-strike.strike polyline { animation:pointer-strike .5s ease-out; }
-    .storm-core-strike polyline.branch { stroke-width:1.4;animation-delay:22ms; }
-    .storm-timeline { position:relative;z-index:12;width:min(920px,100%);justify-self:center;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:clamp(14px,2.4vw,32px);padding:13px 0 2px;border-top:1px solid rgba(255,255,255,.16); }
-    .storm-time-readout { min-width:68px;font:700 clamp(18px,2vw,26px) var(--mono);letter-spacing:-.05em;font-variant-numeric:tabular-nums; }
-    .storm-time-data { min-width:94px;text-align:right;font:9px/1.5 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--ink-dim); }
-    .storm-time-data strong { display:block;color:var(--accent);font-weight:400; }
-    .storm-scrubber { position:relative;height:44px;display:grid;grid-template-columns:repeat(24,1fr);align-items:center;touch-action:none;user-select:none;cursor:ew-resize; }
-    .storm-scrubber::before { content:"";position:absolute;left:1.8%;right:1.8%;top:50%;height:1px;background:rgba(255,255,255,.18); }
-    .storm-tick { position:relative;z-index:1;width:100%;height:44px;border:0;padding:0;background:transparent;cursor:pointer; }
-    .storm-tick::before { content:"";position:absolute;left:50%;top:50%;width:2px;height:6px;background:rgba(255,255,255,.32);transform:translate(-50%,-50%);transition:height .25s var(--ease),background .25s,box-shadow .25s; }
-    .storm-tick:nth-child(3n+1)::before { height:11px; }
-    .storm-tick.active::before { height:26px;background:var(--accent);box-shadow:0 0 13px var(--accent); }
-    .storm-tick span { position:absolute;top:34px;left:50%;transform:translateX(-50%);font:7px var(--mono);color:rgba(255,255,255,.46); }
-    .storm-tick:not(:nth-child(6n+1)) span { display:none; }
-
-    /* Ethan Vale mechanism: photographic cards mapped to a Fibonacci sphere. */
-    .storm-photo-sphere { position:absolute;inset:0;z-index:3;transform-style:preserve-3d;perspective:1100px;pointer-events:none; }
-    .storm-photo-card { position:absolute;left:50%;top:50%;width:140px;height:180px;margin:0;border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:0;overflow:hidden;background:#07101a;color:var(--ink);box-shadow:0 14px 45px rgba(0,0,0,.34);transform-style:preserve-3d;backface-visibility:hidden;will-change:transform,filter;pointer-events:auto;cursor:grab;transition:border-color .25s,box-shadow .25s; }
-    .storm-photo-card:hover,.storm-photo-card:focus-visible { border-color:rgba(168,226,255,.66);box-shadow:0 16px 54px rgba(0,0,0,.48),0 0 24px rgba(127,212,255,.12); }
-    .storm-photo-card:active { cursor:grabbing; }
-    .storm-photo-card img { display:block;width:100%;height:142px;object-fit:cover;pointer-events:none; }
-    .storm-photo-meta { height:38px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 10px;background:rgba(3,8,14,.92);font:8px var(--mono);letter-spacing:.09em;text-transform:uppercase;pointer-events:none; }
-    .storm-photo-meta strong { color:var(--accent);font-weight:400;font-size:10px; }
-    .storm-core-copy { position:absolute;left:50%;top:50%;width:min(74vw,760px);z-index:40;text-align:center;pointer-events:none;transform:translate(-50%,-50%) translateZ(52px);transform-style:preserve-3d;will-change:transform; }
-    .storm-core-copy h2 { margin:0;font-size:clamp(86px,15vw,230px);font-weight:800;line-height:.74;letter-spacing:-.1em;text-transform:uppercase;text-shadow:0 24px 75px rgba(0,0,0,.72),0 0 42px rgba(145,220,255,.17); }
-    .storm-core-copy p { margin:clamp(18px,3vh,34px) auto 0;max-width:38ch;font:10px/1.65 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:rgba(243,247,251,.64); }
-    .storm-core-copy p span { color:var(--accent); }
-    .storm-sphere-stage { cursor:grab; }
-    .storm-sphere-stage.is-dragging { cursor:grabbing; }
-    .storm-orbit-label::after { content:"16 thẻ / Fibonacci"; }
-    .storm-card-lightbox[hidden] { display:none; }
-    .storm-card-lightbox { position:fixed;inset:0;z-index:190;display:grid;place-items:center;padding:clamp(18px,4vw,56px);background:rgba(1,3,7,.78);backdrop-filter:blur(18px);opacity:0;transition:opacity .42s var(--ease); }
-    .storm-card-lightbox.open { opacity:1; }
-    .storm-detail-panel { position:relative;width:min(880px,100%);max-height:min(82svh,760px);display:grid;grid-template-columns:minmax(0,1.12fr) minmax(280px,.88fr);overflow:hidden;border:1px solid rgba(255,255,255,.2);border-radius:12px;background:#050a11;box-shadow:0 34px 120px rgba(0,0,0,.72);transform-origin:top left;transition:transform .58s var(--ease),opacity .42s var(--ease); }
-    .storm-detail-image { width:100%;height:100%;min-height:520px;object-fit:cover; }
-    .storm-detail-copy { padding:clamp(28px,5vw,64px);display:flex;flex-direction:column;justify-content:space-between;gap:34px;background:radial-gradient(circle at 100% 0,rgba(92,180,225,.13),transparent 38%),#050a11; }
-    .storm-detail-kicker { font:9px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent); }
-    .storm-detail-hour { display:block;margin-top:14px;font:800 clamp(66px,10vw,128px)/.78 var(--display);letter-spacing:-.09em; }
-    .storm-detail-stats { display:grid;grid-template-columns:1fr 1fr;gap:20px;border-block:1px solid rgba(255,255,255,.14);padding-block:18px; }
-    .storm-detail-stats span { font:9px/1.5 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim); }
-    .storm-detail-stats strong { display:block;margin-top:6px;color:var(--ink);font:600 24px var(--mono);letter-spacing:-.05em; }
-    .storm-detail-poem { margin:0;font-size:clamp(16px,2vw,24px);line-height:1.45;letter-spacing:-.025em;color:rgba(243,247,251,.82); }
-    .storm-detail-close { position:absolute;z-index:2;right:14px;top:14px;width:42px;height:42px;border:1px solid rgba(255,255,255,.24);border-radius:50%;background:rgba(2,6,11,.72);backdrop-filter:blur(10px);cursor:pointer;font-size:20px;line-height:1; }
-
-    .district-section { min-height:110svh;padding:clamp(90px,12vw,170px) 0 max(48px,env(safe-area-inset-bottom));background:radial-gradient(circle at 14% 82%,rgba(47,94,118,.18),transparent 30%),#05080d;overflow:hidden; }
-    .district-heading { padding-inline:var(--pad);display:flex;justify-content:space-between;align-items:end;gap:30px;margin-bottom:clamp(40px,6vw,78px); }.district-eyebrow{color:var(--accent)}.district-heading h2{margin:16px 0 0;font-size:clamp(50px,8.5vw,136px);line-height:.86;letter-spacing:-.07em;text-transform:uppercase}.district-deck-controls{display:flex;gap:8px}.deck-arrow{width:48px;height:48px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.04);font-size:18px;cursor:pointer}.deck-arrow:disabled{opacity:.3}
-    .district-stage { width:100%;overflow:hidden;touch-action:pan-y; }.district-track{display:flex;gap:clamp(14px,2vw,28px);padding-inline:var(--pad);will-change:transform;transition:transform .75s var(--ease)}.district-track.dragging{transition:none}.district-card{position:relative;flex:0 0 min(70vw,860px);height:clamp(430px,62vh,660px);overflow:hidden;border:1px solid rgba(255,255,255,.14);background:#07101a;transform:scale(.94);opacity:.56;transition:transform .7s var(--ease),opacity .7s var(--ease),border-color .7s}.district-card.active{transform:scale(1.04);opacity:1;border-color:rgba(158,220,249,.42)}.district-card video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.district-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(1,3,7,.08),rgba(1,3,7,.3) 44%,rgba(1,3,7,.9)),linear-gradient(90deg,rgba(1,3,7,.5),transparent 60%)}.district-card[data-level="low"] video{filter:saturate(.65) brightness(.72)}.district-card[data-level="mid"] video{filter:saturate(.8) brightness(.58)}.district-card[data-level="high"] video{filter:saturate(.9) brightness(.48) contrast(1.12)}.card-content{position:absolute;z-index:1;inset:0;padding:clamp(22px,4vw,50px);display:grid;align-content:space-between}.card-index{font:10px var(--mono);letter-spacing:.12em;color:var(--accent)}.district-name{margin:0;font-size:clamp(46px,7vw,104px);line-height:.85;letter-spacing:-.07em;text-transform:uppercase}.district-metrics{display:flex;gap:clamp(18px,3vw,42px);flex-wrap:wrap}.district-metric span{display:block;font:10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-dim)}.district-metric strong{display:block;margin-top:7px;font:600 clamp(23px,3vw,42px) var(--mono);letter-spacing:-.05em}.district-card p{margin:16px 0 0;max-width:53ch;color:rgba(255,255,255,.66);font-size:13px;line-height:1.6}.deck-dots{display:flex;justify-content:center;gap:9px;margin-top:34px}.deck-dot{width:32px;height:3px;border:0;padding:0;background:rgba(255,255,255,.2);cursor:pointer}.deck-dot.active{background:var(--accent)}.footer-note{margin:clamp(80px,10vw,140px) var(--pad) 0;padding-top:18px;border-top:1px solid var(--hair);display:flex;justify-content:space-between;gap:20px;color:var(--ink-dim);font:10px/1.6 var(--mono);text-transform:uppercase;letter-spacing:.08em}
-
-    @media(max-width:760px){
-      .chapter-rail{display:none}.time-axis{right:6px;top:28%;height:45%;width:52px}
-      .storm-core{min-height:115svh}.storm-core-scene{padding-inline:16px}.storm-sphere-stage{width:100vw;height:min(65vh,620px);margin-inline:-16px}.storm-core-copy h2{font-size:clamp(132px,48vw,218px)}.storm-core-copy p{max-width:29ch;font-size:8px;margin-top:26px}.storm-orbit-label{inset:13%}.storm-orbit-label::before,.storm-orbit-label::after{display:none}.storm-timeline{grid-template-columns:58px minmax(0,1fr);gap:10px}.storm-time-data{grid-column:1/-1;display:flex;justify-content:space-between;width:100%;text-align:left;min-width:0}.storm-time-data strong{display:inline}.storm-scrubber{height:48px}.storm-tick{height:48px}.storm-tick span{top:37px}.storm-core-top span:last-child{display:none}.time-mark{font-size:9px;padding:4px 9px 4px 3px;min-width:44px}.storm-status{top:17%;right:20px;grid-template-columns:auto;padding-block:8px}.storm-status span{display:none}.aperture{width:108vw;left:73%;top:37%}.cold-media{inset:0;width:100%;height:100%;border-radius:0;overflow:hidden;clip-path:none;transform:none}.cold-media video{transform:scale(1.08)}.cold-media::after{background:linear-gradient(100deg,rgba(1,3,7,.88),rgba(1,3,7,.28) 58%,rgba(1,3,7,.58)),linear-gradient(180deg,rgba(1,3,7,.18),transparent 46%,rgba(1,3,7,.5))}.utility{top:max(12px,env(safe-area-inset-top));right:12px}.sound-toggle{padding:9px 10px}.loader-count{font-size:30vw}.cold-title{font-size:clamp(54px,16.7vw,92px)}.dateline span:last-child{display:none}.cold-bottom{align-items:flex-start;flex-direction:column}.hold-rain{align-self:flex-end}.act{min-height:140svh}.act-shell{padding-inline:20px}.act-title-wrap{max-width:100%}.act-title{font-size:clamp(58px,19vw,108px)}.act-title.is-peak{font-size:clamp(150px,51vw,230px)}.act-bottom{flex-direction:column;align-items:flex-start}.act-caption{text-align:left}.scene-shade{background:linear-gradient(180deg,rgba(2,4,8,.32),rgba(2,4,8,.08) 38%,rgba(2,4,8,.8))}.portal-ring{width:90vw}.marquee{height:105px}.marquee-track{font-size:72px}.act-final{min-height:170svh}.eye-stage{grid-template-columns:1fr;align-content:center;gap:12px}.eye-copy{display:flex;align-items:end;justify-content:space-between;gap:18px}.eye-copy .act-title{font-size:50px}.day-result{margin:0;text-align:right}.day-result strong{font-size:20px}.storm-eye-wrap{width:min(92vw,520px)}.eye-percent{font-size:22vw}.district-heading{align-items:flex-start;flex-direction:column}.district-heading h2{font-size:16vw}.district-deck-controls{align-self:flex-end}.district-track{gap:14px;padding-inline:20px}.district-card{flex-basis:calc(100vw - 40px);height:72svh;max-height:620px}.district-card.active{transform:scale(1)}.card-content{padding:24px}.district-name{font-size:14vw}.footer-note{margin-inline:20px;flex-direction:column}.moon{right:5vw;top:12vh}
-      .storm-photo-card{width:105px;height:135px;border-radius:10px}.storm-photo-card img{height:105px}.storm-photo-meta{height:30px;padding-inline:7px;font-size:6px}.storm-photo-meta strong{font-size:8px}.storm-core-copy h2{font-size:clamp(72px,23vw,112px)}.storm-core-copy p{max-width:28ch;font-size:7px}.storm-card-lightbox{padding:12px}.storm-detail-panel{grid-template-columns:1fr;max-height:90svh;overflow:auto}.storm-detail-image{height:42svh;min-height:260px}.storm-detail-copy{padding:24px;gap:22px}.storm-detail-hour{font-size:70px}.storm-detail-stats strong{font-size:19px}.storm-detail-close{right:10px;top:10px}
-    }
-
-    @media(prefers-reduced-motion:reduce){
-      html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}.preloader{display:none}.cold-media{clip-path:circle(42% at 72% 38%);transform:none!important}.aperture-ring{animation:none!important}.storm-orbit-label{animation:none!important}.storm-core-copy{transform:none!important}.storm-shockwave,.storm-core-strike{display:none!important}.wind-rain{display:none}.cursor-ring,.cursor-dot{display:none!important}.mask-line>span,.reveal-line>span,.burst{transform:none!important;filter:none!important;opacity:1!important}.media-stack,.cloud-layer{transform:none!important;filter:none!important}.spotlight,.lightning,.rain-veil,.portal-ring,.white-flash,.letterbox,.strike-svg{display:none}.marquee-track{transform:none!important}.radar-spoke{stroke-dashoffset:0!important}.storm-eye-halo{display:none}.district-track{transition:none}.hold-ring{background:rgba(255,255,255,.16)}.storm-sphere-stage{height:min(72vh,680px);overflow:auto;display:block;padding:82px 16px 20px}.storm-photo-sphere{position:relative;inset:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,140px));gap:14px;justify-content:center;perspective:none;pointer-events:auto}.storm-photo-card{position:relative;left:auto;top:auto;transform:none!important;filter:none!important;opacity:1!important}.storm-core-copy{position:absolute;left:50%;top:12px;transform:translateX(-50%)!important;z-index:80}.storm-core-copy h2{font-size:58px}.storm-core-copy p{display:none}
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<title>Hôm nay có mưa không? · Sài Gòn</title>
+<meta name="description" content="Tấm gương phản chiếu bầu trời thật của Sài Gòn — cảnh tự đổi theo thời tiết live. Hôm nay Sài Gòn có mưa không? Xem đáp án và du hành 24 giờ tới." />
+<meta property="og:title" content="Hôm nay có mưa không? · Sài Gòn" />
+<meta property="og:description" content="Gương trời Sài Gòn — thời tiết thật, cảnh phim thật." />
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="vi_VN" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&family=Space+Mono:wght@400;700&display=swap&subset=vietnamese" rel="stylesheet" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","name":"Hôm nay có mưa không? · Sài Gòn",
+ "description":"Trang phản chiếu bầu trời thật của Sài Gòn theo thời tiết live.",
+ "inLanguage":"vi-VN","about":{"@type":"City","name":"Thành phố Hồ Chí Minh"}}
+</script>
+<style>
+:root{
+  --bg0:#020409; --bg1:#04070d;
+  --ink:#eef6ff; --ink-dim:rgba(238,246,255,.64); --ink-faint:rgba(238,246,255,.38);
+  --line:rgba(238,246,255,.14);
+  --accent:#7dd3fc; --amber:#fbbf24;
+  --glass:rgba(10,18,30,.55);
+  --ease:cubic-bezier(.22,1,.36,1);
+  --display:"Be Vietnam Pro",system-ui,sans-serif;
+  --mono:"Space Mono",ui-monospace,monospace;
+  --pad:clamp(20px,5vw,88px);
+}
+*{box-sizing:border-box}
+html{background:var(--bg0);scroll-behavior:smooth}
+html.rm{scroll-behavior:auto}
+body{margin:0;min-width:320px;overflow-x:clip;background:var(--bg0);color:var(--ink);
+  font-family:var(--display);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:rgba(125,211,252,.28)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.skip{position:fixed;top:-60px;left:16px;z-index:200;background:var(--accent);color:#04121e;
+  padding:10px 18px;border-radius:10px;font-weight:600;transition:top .25s var(--ease);text-decoration:none}
+.skip:focus{top:12px}
+/* ---------- preloader ---------- */
+#preloader{position:fixed;inset:0;z-index:100;background:var(--bg0);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:18px}
+#preloader .pct{font-family:var(--mono);font-size:clamp(3rem,10vw,6rem);font-weight:700;letter-spacing:-.02em}
+#preloader .lbl{font-family:var(--mono);font-size:.8rem;color:var(--ink-dim);letter-spacing:.28em;text-transform:uppercase}
+#preloader .bar{width:min(320px,60vw);height:2px;background:rgba(238,246,255,.12);overflow:hidden;border-radius:2px}
+#preloader .bar i{display:block;height:100%;width:0;background:var(--accent)}
+/* ---------- topbar ---------- */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+  padding:16px var(--pad);background:linear-gradient(180deg,rgba(2,4,9,.72),transparent)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.22em;font-size:.8rem}
+.brand svg{width:22px;height:22px;stroke:var(--accent)}
+.livebadge{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:.75rem;color:var(--ink-dim);
+  letter-spacing:.12em;border:1px solid var(--line);border-radius:999px;padding:8px 16px;background:rgba(4,7,13,.5)}
+.livebadge .dot{width:8px;height:8px;border-radius:50%;background:#4ade80;animation:blink 1.6s ease-in-out infinite}
+.livebadge.off .dot{background:var(--amber);animation:none}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+html.rm .livebadge .dot{animation:none}
+/* ---------- sky stage ---------- */
+.stage{position:absolute;inset:0;overflow:hidden;background:#05080e}
+.stage video.vv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0}
+.stage img.poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1}
+.stage .grade{position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:linear-gradient(180deg,rgba(3,7,18,.85),rgba(3,7,18,.45) 45%,rgba(3,7,18,.75))}
+.stage canvas.fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.stage canvas.stars{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0}
+.grain{position:absolute;inset:-120px;pointer-events:none;opacity:.05;z-index:5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain 1.1s steps(4) infinite}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-40px,30px)}50%{transform:translate(30px,-45px)}75%{transform:translate(-25px,-20px)}100%{transform:translate(0,0)}}
+html.rm .grain{animation:none}
+.scenetag{position:absolute;z-index:6;top:86px;left:var(--pad);display:flex;align-items:center;gap:12px;
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-dim);
+  text-shadow:0 2px 12px rgba(0,0,0,.7);pointer-events:none}
+/* ---------- hero ---------- */
+.hero{position:relative;min-height:100svh;display:flex;align-items:flex-end;overflow:clip;
+  padding:calc(72px + 4vh) var(--pad) 210px}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:4;
+  background:linear-gradient(180deg,rgba(2,4,9,.30) 0%,transparent 30%,transparent 55%,rgba(2,4,9,.85) 100%)}
+.hero-inner{position:relative;z-index:6;max-width:1200px;width:100%;pointer-events:none}
+.hero-inner a{pointer-events:auto}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 18px;display:flex;align-items:center;gap:12px;text-shadow:0 2px 10px rgba(0,0,0,.8)}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--accent)}
+h1.verdict{margin:0;font-weight:800;line-height:1.02;letter-spacing:-.025em;
+  font-size:clamp(2.9rem,8.4vw,7.6rem);max-width:12ch;text-shadow:0 4px 30px rgba(0,0,0,.55)}
+h1.verdict .yes{color:var(--accent)}
+h1.verdict .no{color:#fde68a}
+.hero-sub{margin:22px 0 0;font-size:clamp(1rem,1.6vw,1.25rem);color:#dbe7f2;max-width:58ch;line-height:1.7;
+  text-shadow:0 2px 14px rgba(0,0,0,.8)}
+.hero-sub strong{color:#fff;font-weight:600}
+.verdict-card{margin-top:30px;display:flex;flex-wrap:wrap;gap:12px}
+.chip{display:inline-flex;align-items:center;gap:10px;padding:13px 20px;border-radius:16px;
+  background:var(--glass);border:1px solid var(--line);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  font-family:var(--mono);font-size:.86rem;letter-spacing:.02em}
+.chip svg{width:18px;height:18px;stroke:var(--accent);flex:none}
+.chip.hot svg{stroke:var(--amber)}
+.skyflash{position:absolute;z-index:6;left:50%;transform:translateX(-50%);bottom:196px;
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.26em;text-transform:uppercase;color:var(--ink);
+  background:rgba(4,8,14,.55);border:1px solid var(--line);border-radius:999px;padding:10px 22px;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  opacity:0;transition:opacity .5s var(--ease);pointer-events:none;text-shadow:none;white-space:nowrap}
+.skyflash.show{opacity:1}
+/* ---------- film strip (time travel) ---------- */
+.filmstrip{position:absolute;z-index:6;left:50%;transform:translateX(-50%);bottom:26px;width:min(860px,calc(100vw - 40px));
+  background:rgba(4,8,14,.62);border:1px solid var(--line);border-radius:20px;
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);padding:14px 18px 10px}
+.filmstrip .fs-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.filmstrip .fs-label{font-family:var(--mono);font-size:.68rem;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-dim)}
+.filmstrip .fs-read{font-family:var(--mono);font-size:.74rem;color:var(--ink);letter-spacing:.06em}
+#backNow{display:none;font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;color:var(--accent);
+  border:1px solid rgba(125,211,252,.4);border-radius:999px;padding:7px 16px;text-transform:uppercase}
+#backNow.show{display:inline-block}
+.fs-track{position:relative;height:54px;border-radius:12px;background:rgba(4,8,14,.55);
+  border:1px solid var(--line);cursor:pointer;touch-action:pan-y}
+.fs-ticks{position:absolute;inset:8px 12px;display:flex;justify-content:space-between;align-items:stretch;pointer-events:none}
+.fs-tick{flex:1;border-radius:4px;margin:0 1px;position:relative;overflow:hidden;opacity:.75}
+.fs-tick i{position:absolute;inset:0}
+.fs-tick.now{box-shadow:0 0 0 2px var(--accent);opacity:1}
+.fs-tick.sel{box-shadow:0 0 0 2px #fff;opacity:1}
+.fs-fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:12px;pointer-events:none;
+  background:linear-gradient(90deg,rgba(125,211,252,.04),rgba(125,211,252,.22))}
+.fs-thumb{position:absolute;top:50%;width:22px;height:22px;border-radius:50%;background:var(--accent);
+  transform:translate(-50%,-50%);box-shadow:0 0 0 6px rgba(125,211,252,.18),0 4px 18px rgba(125,211,252,.5);
+  pointer-events:none}
+.fs-labels{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--mono);
+  font-size:.66rem;color:var(--ink-faint);letter-spacing:.08em}
+/* ---------- sections ---------- */
+.section{position:relative;padding:clamp(88px,12vh,150px) var(--pad);overflow:clip}
+.kicker{font-family:var(--mono);font-size:.76rem;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 14px}
+h2.stitle{margin:0 0 16px;font-weight:800;letter-spacing:-.02em;line-height:1.08;
+  font-size:clamp(2rem,4.6vw,3.6rem);max-width:16ch}
+.lede{margin:0 0 48px;color:var(--ink-dim);font-size:clamp(1rem,1.4vw,1.15rem);line-height:1.75;max-width:62ch}
+/* ---------- today cards ---------- */
+#today{background:linear-gradient(180deg,var(--bg0),var(--bg1))}
+.cards{display:grid;grid-template-columns:1fr;gap:18px;margin-top:8px}
+@media(min-width:860px){.cards{grid-template-columns:repeat(3,1fr)}}
+.card{border:1px solid var(--line);border-radius:22px;padding:30px 28px;background:var(--glass);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  transition:transform .3s var(--ease),border-color .3s,box-shadow .3s}
+.card:hover{transform:translateY(-6px);border-color:rgba(125,211,252,.4);box-shadow:0 24px 60px rgba(2,8,18,.6)}
+.card .when{font-family:var(--mono);font-size:.74rem;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-dim)}
+.card h3{margin:14px 0 8px;font-size:1.5rem;font-weight:700;letter-spacing:-.01em}
+.card p{margin:0;color:var(--ink-dim);line-height:1.75;font-size:.98rem}
+.card .big{font-family:var(--mono);font-size:2.2rem;font-weight:700;color:var(--accent);margin:18px 0 4px}
+.card.warn .big{color:var(--amber)}
+.card svg{width:30px;height:30px;stroke:var(--accent);margin-bottom:6px;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.card.warn svg{stroke:var(--amber)}
+/* ---------- screening room ---------- */
+#cinema{background:var(--bg1)}
+.reel{display:grid;grid-template-columns:1fr;gap:18px}
+@media(min-width:700px){.reel{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1100px){.reel{grid-template-columns:repeat(3,1fr)}}
+.shot{position:relative;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#05080e;
+  aspect-ratio:21/10;transition:transform .3s var(--ease),border-color .3s,box-shadow .3s;text-align:left;padding:0;width:100%}
+.shot:hover{transform:translateY(-6px);border-color:rgba(125,211,252,.45);box-shadow:0 24px 60px rgba(2,8,18,.65)}
+.shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .6s var(--ease)}
+.shot:hover img{transform:scale(1.04)}
+.shot .cap{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:34px 20px 16px;
+  background:linear-gradient(180deg,transparent,rgba(2,4,9,.85));display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.shot .cap b{font-weight:700;font-size:1.02rem;letter-spacing:.02em}
+.shot .cap span{font-family:var(--mono);font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim)}
+.shot .play{position:absolute;top:14px;right:14px;z-index:2;width:40px;height:40px;border-radius:50%;
+  background:rgba(4,8,14,.6);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.shot .play svg{width:16px;height:16px;fill:var(--ink)}
+.shot.extreme .cap span{color:var(--amber)}
+/* ---------- lightbox ---------- */
+#lightbox{position:fixed;inset:0;z-index:90;display:none;background:#010204}
+#lightbox.open{display:block}
+#lightbox .stage{position:absolute;inset:0}
+#lightbox .lb-tag{position:absolute;z-index:7;top:26px;left:var(--pad);font-family:var(--mono);font-size:.72rem;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--ink-dim);text-shadow:0 2px 10px rgba(0,0,0,.8);pointer-events:none}
+#lightbox .lb-hint{position:absolute;z-index:7;left:50%;transform:translateX(-50%);bottom:30px;
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim);
+  text-shadow:0 2px 10px rgba(0,0,0,.85);pointer-events:none;white-space:nowrap}
+#lbClose{position:absolute;z-index:8;top:20px;right:22px;width:52px;height:52px;border-radius:50%;
+  background:rgba(4,8,14,.6);border:1px solid var(--line);font-size:1.3rem;color:var(--ink);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+#lbClose:hover{border-color:var(--accent)}
+/* ---------- footer ---------- */
+footer{padding:56px var(--pad) 120px;color:var(--ink-faint);font-size:.85rem;line-height:1.9;
+  border-top:1px solid var(--line);background:var(--bg0)}
+footer .row{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;max-width:1200px}
+footer strong{color:var(--ink-dim);font-weight:600}
+/* ---------- audio toggle ---------- */
+#audioBtn{position:fixed;right:20px;bottom:20px;z-index:60;width:56px;height:56px;border-radius:50%;
+  background:var(--glass);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  transition:transform .25s var(--ease),border-color .25s,box-shadow .25s}
+#audioBtn:hover{transform:scale(1.08);border-color:rgba(125,211,252,.5)}
+#audioBtn:active{transform:scale(.96)}
+#audioBtn svg{width:24px;height:24px;stroke:var(--ink);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#audioBtn.on{border-color:var(--accent);box-shadow:0 0 24px rgba(125,211,252,.35)}
+#audioBtn.on svg{stroke:var(--accent)}
+/* ---------- reveal ---------- */
+.rv{opacity:0;transform:translateY(34px)}
+.rv.in{opacity:1;transform:none;transition:opacity .9s var(--ease),transform .9s var(--ease)}
+html.rm .rv{opacity:1;transform:none}
+@media(max-width:640px){
+  .livebadge .txt{display:none}
+  .hero{padding-bottom:250px}
+  .skyflash{bottom:236px}
+  .scenetag{top:76px}
+  #audioBtn{right:14px;bottom:14px}
+}
+</style>
 </head>
 <body>
-  <div class="preloader" id="preloader" aria-live="polite">
-    <canvas id="loaderRain" aria-hidden="true"></canvas>
-    <div class="loader-top"><span>SÀI GÒN · 03.10.2026</span><span>KHÍ QUYỂN / 001</span></div>
-    <div class="loader-center"><div class="loader-count"><span id="loaderCount">0</span><small>%</small></div><div class="loader-line"><span id="loaderLine"></span></div></div>
-    <div class="loader-bottom"><span>ĐANG GỌI MƯA...</span><span>VUI LÒNG CHỜ</span></div>
+<a class="skip" href="#answer">Bỏ qua tới đáp án</a>
+
+<div id="preloader" role="status" aria-label="Đang tải">
+  <div class="pct" id="loadPct">00</div>
+  <div class="bar"><i id="loadBar"></i></div>
+  <div class="lbl">Đang mở gương trời</div>
+</div>
+
+<header class="topbar">
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M17.5 19a4.5 4.5 0 0 0 .42-8.98 6.5 6.5 0 0 0-12.7 1.61A4 4 0 0 0 6 19h11.5z"/>
+      <path d="M8 21v.5M12 21v.5M16 21v.5"/>
+    </svg>
+    GƯƠNG&nbsp;TRỜI
   </div>
-  <div class="grain" aria-hidden="true"></div><div class="vignette" aria-hidden="true"></div>
-  <canvas class="wind-rain" id="windRain" aria-hidden="true"></canvas>
-  <div class="white-flash" aria-hidden="true"></div><div class="letterbox top" aria-hidden="true"></div><div class="letterbox bottom" aria-hidden="true"></div>
-  <div class="cursor-ring" aria-hidden="true"></div><div class="cursor-dot" aria-hidden="true"></div>
-  <div class="utility"><button class="sound-toggle magnetic" id="soundToggle" data-mode="off" type="button" aria-pressed="false" aria-label="Âm thanh đang tắt. Nhấn để nghe tiếng mưa">Âm thanh: Tắt<span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i></span></button></div>
-  <nav class="chapter-rail" aria-label="Các hồi trong ngày">
-    <button class="rail-dot magnetic" data-target="cold" aria-label="Mở đầu" aria-current="true"></button><button class="rail-dot magnetic" data-target="storm-core" aria-label="Mắt bão 3D"></button><button class="rail-dot magnetic" data-target="act1" aria-label="Hồi một"></button><button class="rail-dot magnetic" data-target="act2" aria-label="Hồi hai"></button><button class="rail-dot magnetic" data-target="act3" aria-label="Hồi ba"></button><button class="rail-dot magnetic" data-target="act4" aria-label="Hồi bốn"></button><button class="rail-dot magnetic" data-target="districts" aria-label="Khu vực"></button>
-  </nav>
-  <nav class="time-axis" id="timeAxis" aria-label="Trục thời gian trong ngày">
-    <div class="time-axis-line" aria-hidden="true"></div><div class="time-axis-fill" aria-hidden="true"></div><div class="time-axis-orb" aria-hidden="true"></div>
-    <button class="time-mark" data-target="act1" type="button">06</button><button class="time-mark" data-target="act2" type="button">12</button><button class="time-mark" data-target="act3" type="button">15</button><button class="time-mark" data-target="act4" type="button">19</button>
-  </nav>
+  <div class="livebadge" id="liveBadge"><span class="dot"></span><span class="txt" id="liveTxt">Đang lấy trời thật…</span></div>
+</header>
 
-  <main>
-    <section class="cold-open" id="cold" data-section data-audio=".03">
-      <div class="cold-media" aria-hidden="true"><video src="assets/storm-video-1.mp4" muted autoplay loop playsinline preload="auto"></video></div>
-      <div class="aperture" aria-hidden="true"><span class="aperture-ring"></span><span class="aperture-ring"></span><span class="aperture-ring"></span><span class="aperture-cross"></span></div>
-      <div class="storm-status" aria-hidden="true"><span>Áp suất</span><b>1006 hPa</b><span>Độ ẩm</span><b>84%</b><span>Mây</span><b>Đang dày</b></div>
-      <div class="dateline"><span>TP.HCM · 03.10.2026 · DỮ LIỆU MẪU</span><span>MỘT NGÀY / BỐN HỒI</span></div>
-      <h1 class="cold-title" aria-label="Hôm nay có mưa không?"><span class="mask-line"><span>Hôm nay</span></span><span class="mask-line"><span>Có mưa không?</span></span></h1>
-      <div class="cold-bottom"><p class="cold-note">Một ngày Sài Gòn đi từ yên ắng đến cao trào — rồi trả bầu trời về đêm.</p><button class="hold-rain magnetic" id="holdRain" type="button" aria-label="Nhấn giữ 1,2 giây để gọi mưa"><span>Nhấn giữ để gọi mưa</span><span class="hold-ring" aria-hidden="true"><span>↓</span></span></button></div>
-    </section>
-
-    <section class="storm-core" id="storm-core" data-section data-audio=".25" aria-labelledby="stormCoreTitle">
-      <div class="storm-core-scene">
-        <div class="storm-core-top"><strong>Trả lời / Mắt bão</strong><span>Kéo xoay · chạm gọi sét</span></div>
-        <div class="storm-sphere-stage" id="stormSphereStage" role="application" aria-label="Quả cầu thẻ ảnh mưa 3D. Kéo hoặc vuốt để xoay, chạm thẻ để xem chi tiết.">
-          <div class="storm-photo-sphere" id="stormPhotoSphere"><div class="storm-core-copy" id="stormCoreCopy"><h2 id="stormCoreTitle">Có mưa.</h2><p>Mưa mạnh nhất lúc <span id="stormPeakCopy">15:00</span> · kéo xoay và chạm một khung giờ</p></div></div>
-          <div class="storm-orbit-label" aria-hidden="true"></div>
-        </div>
-        <div class="storm-timeline" aria-label="Dòng thời gian mưa 24 giờ">
-          <output class="storm-time-readout" id="stormTimeReadout">15:00</output>
-          <div class="storm-scrubber" id="stormScrubber" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="23" aria-valuenow="15" aria-label="Chọn giờ để điều khiển cường độ quả cầu bão"></div>
-          <div class="storm-time-data"><span>Cường độ</span><strong id="stormTimeData">1.1 mm · 71%</strong></div>
-        </div>
-      </div>
-    </section>
-
-    <div class="storm-card-lightbox" id="stormCardLightbox" role="dialog" aria-modal="true" aria-labelledby="stormDetailHour" hidden>
-      <article class="storm-detail-panel" id="stormDetailPanel">
-        <button class="storm-detail-close" id="stormDetailClose" type="button" aria-label="Đóng chi tiết giờ mưa">×</button>
-        <img class="storm-detail-image" id="stormDetailImage" src="assets/storm-image-1.webp" alt="Mây bão trên bầu trời Sài Gòn" />
-        <div class="storm-detail-copy"><div><span class="storm-detail-kicker">Mưa Sài Gòn · Dữ liệu mẫu</span><strong class="storm-detail-hour" id="stormDetailHour">15:00</strong></div><div class="storm-detail-stats"><span>Khả năng mưa<strong id="stormDetailChance">71%</strong></span><span>Lượng mưa<strong id="stormDetailRain">1.1 mm</strong></span></div><p class="storm-detail-poem" id="stormDetailPoem">Trời đổ ập như ai hất cả xô nước.</p></div>
-      </article>
+<main>
+  <!-- ============ HERO: LIVE SKY ============ -->
+  <section class="hero" id="answer" aria-labelledby="verdictTitle">
+    <div class="stage" id="heroStage" aria-hidden="true">
+      <img class="poster" id="heroPoster" alt="" />
+      <video class="vv" id="vvA" muted loop playsinline preload="none"></video>
+      <video class="vv" id="vvB" muted loop playsinline preload="none"></video>
+      <div class="grade" id="heroGrade"></div>
+      <canvas class="stars" id="heroStars"></canvas>
+      <canvas class="fx" id="heroFx"></canvas>
+      <div class="grain"></div>
+      <div class="scenetag"><span id="sceneName">Đang mở gương trời…</span></div>
     </div>
-
-    <section class="act" id="act1" data-section data-act data-audio=".08">
-      <div class="scene"><div class="sky"></div><div class="media-stack"><video class="media-layer scrub-video" src="assets/storm-video-1.mp4" muted loop playsinline preload="auto" aria-label="Bầu trời Sài Gòn yên tĩnh vào sáng sớm"></video></div><div class="cloud-layer"></div><div class="scene-shade"></div><div class="rain-veil"></div>
-        <div class="act-shell"><div class="act-top"><span class="act-kicker">06:00 · Trời yên</span><span class="chapter-num">Hồi I / IV</span></div><div class="act-title-wrap"><h2 class="act-title"><span class="reveal-line"><span>Trời</span></span><span class="reveal-line"><span>yên</span></span></h2></div><div class="act-bottom"><div class="metrics burst"><strong class="odometer" data-value="20"><span class="odo-number">20</span>%</strong><span class="odometer" data-value="33"><span class="odo-number">33</span>°C</span><span>gió nhẹ</span></div><p class="act-caption">Sáng mở đầu bằng một khoảng trời còn giữ được nhịp thở chậm.</p></div></div>
+    <div class="hero-inner">
+      <p class="eyebrow rv">Trả lời nhanh · <span id="updTime">đang cập nhật</span></p>
+      <h1 class="verdict rv" id="verdictTitle">Hôm nay, Sài Gòn <span class="yes">có mưa.</span></h1>
+      <p class="hero-sub rv" id="heroSub">Đang lấy số liệu thời tiết thật…</p>
+      <div class="verdict-card rv" role="list" aria-label="Số liệu hiện tại" id="chipRow"></div>
+    </div>
+    <div class="skyflash" id="skyFlash" role="status"></div>
+    <div class="filmstrip rv" aria-label="Du hành thời gian">
+      <div class="fs-top">
+        <span class="fs-label">Du hành 24 giờ</span>
+        <span class="fs-read" id="fsRead">Hiện tại</span>
+        <button id="backNow">Về hiện tại</button>
       </div>
-    </section>
-    <div class="marquee" aria-hidden="true"><div class="marquee-track"><span>MƯA — DÔNG — SÉT — GIÓ —</span><span>MƯA — DÔNG — SÉT — GIÓ —</span><span>MƯA — DÔNG — SÉT — GIÓ —</span></div></div>
-
-    <section class="act" id="act2" data-section data-act data-audio=".18">
-      <div class="scene"><div class="sky"></div><div class="media-stack"><video class="media-layer" src="assets/storm-video-2.mp4" muted autoplay loop playsinline preload="auto" aria-label="Mây mưa kéo về trên thành phố vào buổi trưa"></video></div><div class="cloud-layer"></div><div class="scene-shade"></div><div class="rain-veil"></div><div class="portal-ring" aria-hidden="true"></div>
-        <div class="act-shell"><div class="act-top"><span class="act-kicker">12:00 · Mây kéo về</span><span class="chapter-num">Hồi II / IV</span></div><div class="act-title-wrap"><h2 class="act-title"><span class="reveal-line"><span>Mây kéo</span></span><span class="reveal-line"><span>về</span></span></h2></div><div class="act-bottom"><div class="metrics burst"><strong class="odometer" data-value="57"><span class="odo-number">57</span>%</strong><span class="odometer" data-value="0.6"><span class="odo-number">0.6</span> mm</span></div><p class="act-caption">Rê ngang để tua ánh sáng. Mặt đường bắt đầu phản chiếu một màu bạc lạnh.</p></div></div>
+      <div class="fs-track" id="fsTrack" role="slider" tabindex="0" aria-label="Chọn giờ để xem bầu trời"
+           aria-valuemin="0" aria-valuemax="23" aria-valuenow="0" aria-valuetext="Hiện tại">
+        <div class="fs-fill" id="fsFill"></div>
+        <div class="fs-ticks" id="fsTicks"></div>
+        <div class="fs-thumb" id="fsThumb"></div>
       </div>
-    </section>
-    <div class="marquee" aria-hidden="true"><div class="marquee-track"><span>MƯA — DÔNG — SÉT — GIÓ —</span><span>MƯA — DÔNG — SÉT — GIÓ —</span><span>MƯA — DÔNG — SÉT — GIÓ —</span></div></div>
+      <div class="fs-labels" id="fsLabels"></div>
+    </div>
+  </section>
 
-    <section class="act act-peak" id="act3" data-section data-act data-audio=".34">
-      <div class="scene" role="button" tabindex="0" aria-label="Chạm để gọi sét, kéo ngang để kéo cơn bão"><div class="sky"></div><div class="media-stack peak-parallax"><video class="media-layer" src="assets/storm-video-3.mp4" muted autoplay loop playsinline preload="auto" aria-label="Cơn mưa dông dữ dội lúc giữa chiều"></video></div><div class="cloud-layer"></div><div class="scene-shade"></div><div class="rain-veil"></div><div class="spotlight"></div><div class="lightning" aria-hidden="true"></div><svg class="strike-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"></svg>
-        <div class="act-shell"><div class="act-top"><span class="act-kicker">15:00 · Đỉnh mưa</span><span class="chapter-num">Hồi III / IV</span></div><div class="act-title-wrap"><h2 class="act-title is-peak"><span class="reveal-line"><span>Có.</span></span></h2></div><div class="act-bottom"><div class="metrics burst"><strong class="odometer" data-value="71"><span class="odo-number">71</span>%</strong><span class="odometer" data-value="1.1"><span class="odo-number">1.1</span> mm</span><span>gió <span class="odometer" data-value="18"><span class="odo-number">18</span> km/h</span></span></div><p class="act-caption">Chạm gọi sét. Kéo ngang để bẻ hướng cơn bão.</p></div></div>
-      </div>
-    </section>
-    <div class="marquee" aria-hidden="true"><div class="marquee-track"><span>MƯA — DÔNG — SÉT — GIÓ —</span><span>MƯA — DÔNG — SÉT — GIÓ —</span><span>MƯA — DÔNG — SÉT — GIÓ —</span></div></div>
+  <!-- ============ TODAY ============ -->
+  <section class="section" id="today" aria-labelledby="tdTitle">
+    <p class="kicker rv">Số liệu thật</p>
+    <h2 class="stitle rv" id="tdTitle">Hôm nay thế nào</h2>
+    <p class="lede rv" id="todayLede">Đang lấy số liệu…</p>
+    <div class="cards" id="todayCards"></div>
+  </section>
 
-    <section class="act act-final" id="act4" data-section data-act data-audio=".06">
-      <div class="scene final-scene"><div class="sky"></div><canvas id="starfield" aria-hidden="true"></canvas><div class="moon" aria-hidden="true"></div><div class="media-stack recap-stack"><video class="media-layer recap-video active" data-weather="calm" src="assets/storm-video-1.mp4" muted autoplay loop playsinline preload="auto" aria-label="Bầu trời dịu lại sau mưa"></video><video class="media-layer recap-video" data-weather="rain" src="assets/storm-video-2.mp4" muted autoplay loop playsinline preload="auto" aria-label="Mưa vừa trong thành phố"></video><video class="media-layer recap-video" data-weather="intense" src="assets/storm-video-3.mp4" muted autoplay loop playsinline preload="auto" aria-label="Mưa dông dữ dội"></video></div><div class="cloud-layer"></div><div class="scene-shade"></div>
-        <div class="act-shell"><div class="act-top"><span class="act-kicker">19:00 · Mưa tạnh</span><span class="chapter-num">Hồi IV / IV</span></div>
-          <div class="eye-stage"><div class="eye-copy"><div><h2 class="act-title"><span class="reveal-line"><span>Mắt bão</span></span></h2><p class="day-result">Khép lại một ngày<strong>Tổng ~<span class="odometer" data-value="2"><span class="odo-number">2</span> mm</span></strong></p></div></div>
-            <div class="storm-eye-wrap"><div class="storm-eye-halo"></div><div class="storm-eye" id="stormEye" role="slider" tabindex="0" aria-label="Biểu đồ mưa 24 giờ" aria-valuemin="0" aria-valuemax="23" aria-valuenow="19"><svg viewBox="0 0 500 500" aria-hidden="true"><circle class="radar-ring" cx="250" cy="250" r="220"></circle><circle class="radar-ring inner" cx="250" cy="250" r="155"></circle><circle class="radar-ring inner" cx="250" cy="250" r="92"></circle><g class="radar-spokes" id="radarSpokes"></g><g id="radarHours"></g></svg><div class="eye-readout"><span class="eye-hour" id="eyeHour">19:00</span><strong class="eye-percent"><span id="eyePercent">28</span><small>%</small></strong><span class="eye-rain" id="eyeRain">0.1 mm · mưa nhẹ</span><p class="eye-poem" id="eyePoem">Phố ướt loáng, đèn vàng lên.</p></div><span class="eye-hint">Kéo xoay để xem 24 giờ</span></div></div>
-          </div>
-          <p class="act-caption">Hai mươi bốn nan mưa. Một vòng tay để tua lại cả ngày.</p>
-        </div>
-      </div>
-    </section>
+  <!-- ============ SCREENING ROOM ============ -->
+  <section class="section" id="cinema" aria-labelledby="cmTitle">
+    <p class="kicker rv">Xem cho vui</p>
+    <h2 class="stitle rv" id="cmTitle">Phòng chiếu</h2>
+    <p class="lede rv">Bảy cảnh của rạp — bấm vào để xem toàn màn hình, chạm và nghe thử. Đây là phòng chiếu minh họa, không phải trời thật lúc này.</p>
+    <div class="reel" id="reel"></div>
+  </section>
+</main>
 
-    <section class="district-section" id="districts" data-section data-audio=".025">
-      <div class="district-heading"><div><span class="district-eyebrow">Sau cơn mưa</span><h2>Mỗi nơi,<br />một nhịp.</h2></div><div class="district-deck-controls"><button class="deck-arrow magnetic" id="deckPrev" type="button" aria-label="Khu vực trước">←</button><button class="deck-arrow magnetic" id="deckNext" type="button" aria-label="Khu vực sau">→</button></div></div>
-      <div class="district-stage" id="districtStage"><div class="district-track" id="districtTrack">
-        <article class="district-card active" data-level="high"><video src="assets/storm-video-3.mp4" muted autoplay loop playsinline preload="metadata" aria-hidden="true"></video><div class="card-content"><span class="card-index">01 / TP.HCM</span><div><h3 class="district-name">TP.HCM</h3><div class="district-metrics"><div class="district-metric"><span>Khả năng mưa</span><strong class="card-odo" data-target="71">71%</strong></div><div class="district-metric"><span>Cả ngày</span><strong class="card-odo" data-target="2">~2 mm</strong></div><div class="district-metric"><span>Nhiệt độ</span><strong class="card-odo" data-target="33">33°C</strong></div></div><p>Mưa tăng nhanh từ giữa trưa, đạt đỉnh vào khoảng 15:00 rồi giảm dần khi thành phố lên đèn.</p></div></div></article>
-        <article class="district-card" data-level="high"><video src="assets/storm-video-3.mp4" muted autoplay loop playsinline preload="metadata" aria-hidden="true"></video><div class="card-content"><span class="card-index">02 / THỦ ĐỨC</span><div><h3 class="district-name">Thủ Đức</h3><div class="district-metrics"><div class="district-metric"><span>Khả năng mưa</span><strong>76%</strong></div><div class="district-metric"><span>Cả ngày</span><strong>~2.4 mm</strong></div><div class="district-metric"><span>Nhiệt độ</span><strong>32°C</strong></div></div><p>Phía đông đón mưa sớm hơn, cường độ cao nhất trong khung 14:00–16:00.</p></div></div></article>
-        <article class="district-card" data-level="low"><video src="assets/storm-video-1.mp4" muted autoplay loop playsinline preload="metadata" aria-hidden="true"></video><div class="card-content"><span class="card-index">03 / TÂN BÌNH</span><div><h3 class="district-name">Tân Bình</h3><div class="district-metrics"><div class="district-metric"><span>Khả năng mưa</span><strong>68%</strong></div><div class="district-metric"><span>Cả ngày</span><strong>~1.8 mm</strong></div><div class="district-metric"><span>Nhiệt độ</span><strong>33°C</strong></div></div><p>Mưa đến theo đợt ngắn, xen giữa là những khoảng trời dịu và gió nhẹ.</p></div></div></article>
-        <article class="district-card" data-level="mid"><video src="assets/storm-video-2.mp4" muted autoplay loop playsinline preload="metadata" aria-hidden="true"></video><div class="card-content"><span class="card-index">04 / BÌNH THẠNH</span><div><h3 class="district-name">Bình Thạnh</h3><div class="district-metrics"><div class="district-metric"><span>Khả năng mưa</span><strong>73%</strong></div><div class="district-metric"><span>Cả ngày</span><strong>~2.2 mm</strong></div><div class="district-metric"><span>Nhiệt độ</span><strong>32°C</strong></div></div><p>Mây dày lên sau buổi trưa; mưa rõ nhất dọc khoảng giữa chiều.</p></div></div></article>
-        <article class="district-card" data-level="mid"><video src="assets/storm-video-2.mp4" muted autoplay loop playsinline preload="metadata" aria-hidden="true"></video><div class="card-content"><span class="card-index">05 / GÒ VẤP</span><div><h3 class="district-name">Gò Vấp</h3><div class="district-metrics"><div class="district-metric"><span>Khả năng mưa</span><strong>69%</strong></div><div class="district-metric"><span>Cả ngày</span><strong>~1.9 mm</strong></div><div class="district-metric"><span>Nhiệt độ</span><strong>33°C</strong></div></div><p>Cơn mưa đi nhanh, mạnh nhất lúc 15:00 rồi tạnh dần trước buổi tối.</p></div></div></article>
-      </div></div><div class="deck-dots" id="deckDots" aria-label="Chọn khu vực"></div>
-      <footer class="footer-note"><span>Prototype · Dữ liệu mẫu 03.10.2026</span><span>Không phải dự báo chính thức</span></footer>
-    </section>
-  </main>
+<!-- ============ LIGHTBOX ============ -->
+<div id="lightbox" role="dialog" aria-modal="true" aria-label="Phòng chiếu toàn màn hình">
+  <div class="stage" id="lbStage">
+    <img class="poster" id="lbPoster" alt="" />
+    <video class="vv" id="lbVvA" muted loop playsinline preload="none"></video>
+    <video class="vv" id="lbVvB" muted loop playsinline preload="none"></video>
+    <div class="grade" id="lbGrade"></div>
+    <canvas class="fx" id="lbFx"></canvas>
+    <div class="grain"></div>
+    <div class="lb-tag"><span id="lbName"></span></div>
+  </div>
+  <div class="lb-hint" id="lbHint"></div>
+  <button id="lbClose" aria-label="Đóng phòng chiếu">✕</button>
+</div>
 
-  <noscript><style>.preloader{display:none}.mask-line>span,.reveal-line>span,.burst{transform:none!important;filter:none!important;opacity:1!important}.media-stack{filter:none!important;transform:none!important}.radar-spoke{stroke-dashoffset:0!important}.storm-core{min-height:100svh}.storm-core.webgl-fallback .storm-sphere-stage::before{opacity:1}</style></noscript>
-  <script>
-    (function(){
-      'use strict';
-      var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      var fine=window.matchMedia('(pointer: fine)').matches;
-      var acts=[].slice.call(document.querySelectorAll('[data-act]'));
-      var sections=[].slice.call(document.querySelectorAll('[data-section]'));
-      var dots=[].slice.call(document.querySelectorAll('.rail-dot'));
-      var whiteFlash=document.querySelector('.white-flash');
+<footer>
+  <div class="row">
+    <div><strong>Gương Trời — Hôm nay có mưa không?</strong><br/>Nguồn số liệu: Open-Meteo (miễn phí, mô hình dự báo) · <span id="footUpd">đang cập nhật</span>.</div>
+    <div>Cảnh nền là video/ảnh AI dựng theo footage thật.<br/>Số liệu dự báo có sai số — nhìn trời thật vẫn là chuẩn nhất.</div>
+  </div>
+</footer>
 
-      /* Layer every chapter like a moving film frame instead of a flat full-screen panel */
-      acts.forEach(function(act,index){var scene=act.querySelector('.scene'),frame=document.createElement('div'),ticks=document.createElement('div'),code=document.createElement('div');frame.className='scene-frame';ticks.className='scene-ticks';code.className='scene-code';code.innerHTML='<span>SCENE 0'+(index+1)+' · ATMOS</span><i></i>';frame.setAttribute('aria-hidden','true');ticks.setAttribute('aria-hidden','true');code.setAttribute('aria-hidden','true');scene.appendChild(frame);scene.appendChild(ticks);scene.appendChild(code);});
+<button id="audioBtn" aria-label="Bật âm thanh theo cảnh" aria-pressed="false">
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/>
+  </svg>
+</button>
+<script>
+'use strict';
+/* ================= utils ================= */
+const TAU = Math.PI * 2;
+const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (RM) document.documentElement.classList.add('rm');
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+const lerp = (a,b,t)=>a+(b-a)*t;
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const rand = (a,b)=>a+Math.random()*(b-a);
 
-      /* Cinematic preloader + rain field */
-      var preloader=document.getElementById('preloader'),loaderCount=document.getElementById('loaderCount'),loaderLine=document.getElementById('loaderLine'),loaderCanvas=document.getElementById('loaderRain'),loaderCtx=loaderCanvas.getContext('2d'),loaderDrops=[],loaderRAF=0;
-      function sizeLoader(){var d=Math.min(2,window.devicePixelRatio||1);loaderCanvas.width=innerWidth*d;loaderCanvas.height=innerHeight*d;loaderCanvas.style.width=innerWidth+'px';loaderCanvas.style.height=innerHeight+'px';loaderCtx.setTransform(d,0,0,d,0,0);loaderDrops=[];for(var i=0;i<110;i++)loaderDrops.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,l:18+Math.random()*52,s:5+Math.random()*10,a:.06+Math.random()*.2});}
-      function drawLoader(){loaderCtx.clearRect(0,0,innerWidth,innerHeight);loaderCtx.lineWidth=1;loaderDrops.forEach(function(d){loaderCtx.strokeStyle='rgba(171,220,244,'+d.a+')';loaderCtx.beginPath();loaderCtx.moveTo(d.x,d.y);loaderCtx.lineTo(d.x-5,d.y+d.l);loaderCtx.stroke();d.y+=d.s;if(d.y>innerHeight+70){d.y=-70;d.x=Math.random()*innerWidth;}});loaderRAF=requestAnimationFrame(drawLoader);}
-      function finishLoader(){preloader.classList.add('flash');setTimeout(function(){preloader.classList.add('done');cancelAnimationFrame(loaderRAF);},170);}
-      if(reduce){preloader.classList.add('done');}else{sizeLoader();drawLoader();var loaderStart=performance.now();function loadTick(now){var p=Math.min(1,(now-loaderStart)/1600),e=1-Math.pow(1-p,3);loaderCount.textContent=String(Math.round(e*100));loaderLine.style.transform='scaleX('+e.toFixed(3)+')';if(p<1)requestAnimationFrame(loadTick);else finishLoader();}requestAnimationFrame(loadTick);window.addEventListener('resize',sizeLoader,{passive:true});}
+/* ================= preloader ================= */
+(function preloader(){
+  const el=document.getElementById('preloader'), pct=document.getElementById('loadPct'), bar=document.getElementById('loadBar');
+  window.__preDone=false;
+  window.__preHide=function(){
+    if(window.__preDone) return; window.__preDone=true;
+    if(!el) return;
+    try{ el.style.transition='opacity .45s ease'; el.style.opacity='0'; }catch(e){}
+    setTimeout(()=>{ try{el.remove()}catch(e){} },600);
+  };
+  if(RM){ return; }
+  const t0=performance.now(), DUR=1600;
+  (function tick(t){
+    if(window.__preDone) return;
+    const p=clamp((t-t0)/DUR,0,1), e=1-Math.pow(1-p,3);
+    pct.textContent=String(Math.round(e*94)).padStart(2,'0');
+    bar.style.width=(e*94)+'%';
+    if(p<1) requestAnimationFrame(tick);
+  })(t0);
+  setTimeout(window.__preHide, 6000);
+})();
 
-      /* Wind from your hand: cursor/touch bends a living rain field */
-      var windCanvas=document.getElementById('windRain'),windCtx=windCanvas.getContext('2d'),windDrops=[],windX=-9999,windY=-9999,gustX=0,gustY=0,windLastX=0,windLastY=0,windLastT=0,windRAF=0;
-      function sizeWind(){if(reduce)return;var d=Math.min(2,devicePixelRatio||1);windCanvas.width=Math.max(1,innerWidth*d);windCanvas.height=Math.max(1,innerHeight*d);windCanvas.style.width=innerWidth+'px';windCanvas.style.height=innerHeight+'px';windCtx.setTransform(d,0,0,d,0,0);windDrops=[];for(var i=0;i<150;i++)windDrops.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,l:12+Math.random()*32,s:5+Math.random()*8,a:.05+Math.random()*.18,drift:-2+Math.random()*4});}
-      function seedWindDrop(d,fromTop){d.x=Math.random()*(innerWidth+180)-90;d.y=fromTop?(-60-Math.random()*innerHeight*.2):Math.random()*innerHeight;d.l=12+Math.random()*34;d.s=5+Math.random()*8;d.a=.05+Math.random()*.2;d.drift=-2+Math.random()*4;}
-      function drawWindRain(){if(reduce)return;windCtx.clearRect(0,0,innerWidth,innerHeight);var level=Number(currentAudioLevel)||.03,target=Math.min(windDrops.length,Math.round(48+level*255));gustX*=.93;gustY*=.91;windCtx.lineWidth=1;for(var i=0;i<target;i++){var d=windDrops[i],dx=d.x-windX,dy=d.y-windY,dist=Math.sqrt(dx*dx+dy*dy),avoid=dist<140?Math.pow(1-dist/140,2):0,push=avoid*(dx/(dist||1))*19,bend=d.drift+gustX*.72+push,endX=d.x+bend,endY=d.y+d.l+gustY*.16;windCtx.strokeStyle='rgba(178,224,248,'+Math.min(.34,d.a+level*.16)+')';windCtx.beginPath();windCtx.moveTo(d.x,d.y);windCtx.quadraticCurveTo(d.x+bend*.38,d.y+d.l*.48,endX,endY);windCtx.stroke();d.x+=d.drift+gustX*.07+push*.12;d.y+=d.s+Math.max(-2,gustY*.025);if(d.y>innerHeight+70||d.x<-120||d.x>innerWidth+120)seedWindDrop(d,true);}windRAF=requestAnimationFrame(drawWindRain);}
-      function feedWind(e){var now=performance.now(),dt=Math.max(8,now-(windLastT||now));windX=e.clientX;windY=e.clientY;if(windLastT){var vx=(windX-windLastX)*16/dt,vy=(windY-windLastY)*16/dt;gustX=Math.max(-18,Math.min(18,gustX*.55+vx*.85));gustY=Math.max(-14,Math.min(14,gustY*.55+vy*.65));}windLastX=windX;windLastY=windY;windLastT=now;}
-      if(!reduce){sizeWind();windRAF=requestAnimationFrame(drawWindRain);addEventListener('pointermove',feedWind,{passive:true});addEventListener('pointerdown',feedWind,{passive:true});addEventListener('resize',sizeWind,{passive:true});}
+/* ================= scenes ================= */
+const SCENES = {
+  sun:      {label:'Nắng gắt', video:'assets/scene-sun.mp4',      poster:'assets/scene-sun.jpg',      fx:'dust',  hint:'Di chuột — lens flare bám theo bạn'},
+  overcast: {label:'Âm u',    video:'assets/scene-overcast.mp4', poster:'assets/scene-overcast.jpg', fx:'mist',  hint:'Mây xám trôi — không khí oi nặng trước mưa'},
+  rain:     {label:'Mưa rào',  video:'assets/scene-rain.mp4',     poster:'assets/scene-rain.jpg',     fx:'rain',  hint:'Mưa rơi — di chuột dẫn mắt bão'},
+  storm:    {label:'Giông sét',video:'assets/scene-storm.mp4',   poster:'assets/scene-storm.jpg',     fx:'storm', hint:'Click để gọi sét đè lên video'}
+};
+const EXTREME = {
+  tornado: {label:'Lốc xoáy', img:'assets/scene-tornado.jpg', fx:'tornado', hint:'Di chuột khuấy lốc · click ném vật vào lốc'},
+  typhoon: {label:'Bão tố',   img:'assets/scene-typhoon.jpg', fx:'typhoon', hint:'Mưa xiên — click để gió giật mạnh'},
+  flood:   {label:'Ngập lụt', img:'assets/scene-flood.jpg',   fx:'flood',   hint:'Click mặt nước để tạo sóng lan'}
+};
+const ALL = Object.assign({}, SCENES, EXTREME);
 
-      /* Cursor + water ripple */
-      if(fine&&!reduce){document.body.classList.add('cursor-ready');var ring=document.querySelector('.cursor-ring'),dot=document.querySelector('.cursor-dot'),mx=innerWidth/2,my=innerHeight/2,cx=mx,cy=my;window.addEventListener('pointermove',function(e){mx=e.clientX;my=e.clientY;dot.style.transform='translate3d('+(mx-2)+'px,'+(my-2)+'px,0)';},{passive:true});function cursorLoop(){cx+=(mx-cx)*.18;cy+=(my-cy)*.18;ring.style.transform='translate3d('+(cx-14)+'px,'+(cy-14)+'px,0) rotate(45deg)';requestAnimationFrame(cursorLoop);}cursorLoop();document.addEventListener('pointerover',function(e){if(e.target.closest('button,[role="button"],[role="slider"],a'))ring.classList.add('hover');});document.addEventListener('pointerout',function(e){if(e.target.closest('button,[role="button"],[role="slider"],a'))ring.classList.remove('hover');});document.addEventListener('pointerdown',function(e){var ripple=document.createElement('span');ripple.className='cursor-ripple';ripple.style.left=e.clientX+'px';ripple.style.top=e.clientY+'px';document.body.appendChild(ripple);setTimeout(function(){ripple.remove();},750);});}
+/* ================= audio (procedural theo cảnh) ================= */
+const AU = {
+  ctx:null, master:null, nbuf:null, on:false, stopCur:null, typhoonSet:null,
+  ensure(){
+    if(!this.ctx){
+      const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return false;
+      this.ctx=new AC(); this.master=this.ctx.createGain(); this.master.gain.value=0;
+      this.master.connect(this.ctx.destination);
+      const len=this.ctx.sampleRate*2, b=this.ctx.createBuffer(1,len,this.ctx.sampleRate), d=b.getChannelData(0);
+      for(let i=0;i<len;i++) d[i]=Math.random()*2-1; this.nbuf=b;
+    }
+    if(this.ctx.state==='suspended') this.ctx.resume();
+    return true;
+  },
+  noise(){ const s=this.ctx.createBufferSource(); s.buffer=this.nbuf; s.loop=true; return s; },
+  thunder(vol){
+    if(!this.ctx||!this.on) return;
+    const t=this.ctx.currentTime, len=this.ctx.sampleRate*1.2;
+    const b=this.ctx.createBuffer(1,len,this.ctx.sampleRate), d=b.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
+    const s=this.ctx.createBufferSource(); s.buffer=b;
+    const lp=this.ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=150;
+    const g=this.ctx.createGain();
+    g.gain.setValueAtTime(.55*vol,t); g.gain.exponentialRampToValueAtTime(.001,t+1.2);
+    s.connect(lp); lp.connect(g); g.connect(this.master); s.start(t);
+  },
+  setScene(name){
+    if(this.stopCur){ try{this.stopCur();}catch(e){} this.stopCur=null; }
+    this.typhoonSet=null;
+    if(!this.on||!this.ctx) return;
+    const f=SCENE_AUDIO[name];
+    if(f) this.stopCur=f(this.ctx,this.master,this);
+  },
+  toggle(curScene){
+    this.on=!this.on;
+    if(this.on&&!this.ensure()){ this.on=false; return false; }
+    const t=this.ctx.currentTime;
+    this.master.gain.cancelScheduledValues(t);
+    this.master.gain.setTargetAtTime(this.on?0.9:0,t,.3);
+    if(this.on) this.setScene(curScene); else if(this.stopCur){ try{this.stopCur();}catch(e){} this.stopCur=null; }
+    return this.on;
+  }
+};
+function nz(ctx){ const s=ctx.createBufferSource(); s.buffer=AU.nbuf; s.loop=true; return s; }
+function stopAll(l){ l.forEach(o=>{try{o.stop()}catch(e){}}); }
+const SCENE_AUDIO = {
+  sun(ctx,out){ const g=ctx.createGain(); g.gain.value=.9; g.connect(out);
+    const n=nz(ctx),lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=420;
+    const ng=ctx.createGain(); ng.gain.value=.05; n.connect(lp); lp.connect(ng); ng.connect(g); n.start();
+    const o1=ctx.createOscillator(); o1.type='sine'; o1.frequency.value=4300;
+    const o2=ctx.createOscillator(); o2.type='sine'; o2.frequency.value=4460;
+    const cg=ctx.createGain(); cg.gain.value=.010;
+    const lfo=ctx.createOscillator(); lfo.frequency.value=23;
+    const lg=ctx.createGain(); lg.gain.value=.010; lfo.connect(lg); lg.connect(cg.gain);
+    o1.connect(cg); o2.connect(cg); cg.connect(g); o1.start(); o2.start(); lfo.start();
+    return ()=>{ stopAll([n,o1,o2,lfo]); g.disconnect(); }; },
+  overcast(ctx,out){ const g=ctx.createGain(); g.gain.value=.9; g.connect(out);
+    const n=nz(ctx),lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=520;
+    const ng=ctx.createGain(); ng.gain.value=.05;
+    const lfo=ctx.createOscillator(); lfo.frequency.value=.07;
+    const lg=ctx.createGain(); lg.gain.value=.02; lfo.connect(lg); lg.connect(ng.gain);
+    n.connect(lp); lp.connect(ng); ng.connect(g); n.start(); lfo.start();
+    return ()=>{ stopAll([n,lfo]); g.disconnect(); }; },
+  rain(ctx,out){ const g=ctx.createGain(); g.gain.value=.9; g.connect(out);
+    const n=nz(ctx),lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=1050;
+    const ng=ctx.createGain(); ng.gain.value=.16; n.connect(lp); lp.connect(ng); ng.connect(g); n.start();
+    return ()=>{ stopAll([n]); g.disconnect(); }; },
+  storm(ctx,out){ const g=ctx.createGain(); g.gain.value=.9; g.connect(out);
+    const n=nz(ctx),lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=900;
+    const ng=ctx.createGain(); ng.gain.value=.13; n.connect(lp); lp.connect(ng); ng.connect(g); n.start();
+    return ()=>{ stopAll([n]); g.disconnect(); }; },
+  tornado(ctx,out){ const g=ctx.createGain(); g.gain.value=.9; g.connect(out);
+    const n=nz(ctx),bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=260; bp.Q.value=1.5;
+    const ng=ctx.createGain(); ng.gain.value=.10;
+    const lfo=ctx.createOscillator(); lfo.frequency.value=.11;
+    const lg=ctx.createGain(); lg.gain.value=140; lfo.connect(lg); lg.connect(bp.frequency);
+    const lfo2=ctx.createOscillator(); lfo2.frequency.value=.23;
+    const lg2=ctx.createGain(); lg2.gain.value=.03; lfo2.connect(lg2); lg2.connect(ng.gain);
+    n.connect(bp); bp.connect(ng); ng.connect(g); n.start(); lfo.start(); lfo2.start();
+    return ()=>{ stopAll([n,lfo,lfo2]); g.disconnect(); }; },
+  typhoon(ctx,out,AUref){ const g=ctx.createGain(); g.gain.value=.9; g.connect(out);
+    const n=nz(ctx),lp=ctx.createBiquadFilter(); lp.type='lowpass'; const ng=ctx.createGain();
+    const setL=lv=>{ lp.frequency.value=480+lv*55; ng.gain.value=.08+lv*0.012; };
+    setL(10); AUref.typhoonSet=setL; n.connect(lp); lp.connect(ng); ng.connect(g); n.start();
+    return ()=>{ stopAll([n]); g.disconnect(); AUref.typhoonSet=null; }; },
+  flood(ctx,out){ const g=ctx.createGain(); g.gain.value=.9; g.connect(out);
+    const n=nz(ctx),lp=ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=650;
+    const ng=ctx.createGain(); ng.gain.value=.07; n.connect(lp); lp.connect(ng); ng.connect(g); n.start();
+    const timer=setInterval(()=>{ const t=ctx.currentTime,o=ctx.createOscillator(),og=ctx.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(rand(700,1100),t); o.frequency.exponentialRampToValueAtTime(260,t+.16);
+      og.gain.setValueAtTime(.045,t); og.gain.exponentialRampToValueAtTime(.0001,t+.2);
+      o.connect(og); og.connect(g); o.start(t); o.stop(t+.25); },1400);
+    return ()=>{ stopAll([n]); clearInterval(timer); g.disconnect(); }; }
+};
 
-      /* Magnetic controls */
-      if(fine&&!reduce){document.querySelectorAll('.magnetic').forEach(function(el){var rx=0,ry=0,tx=0,ty=0,raf=0;function animate(){rx+=(tx-rx)*.2;ry+=(ty-ry)*.2;el.style.transform='translate3d('+rx.toFixed(2)+'px,'+ry.toFixed(2)+'px,0)';if(Math.abs(tx-rx)>.1||Math.abs(ty-ry)>.1)raf=requestAnimationFrame(animate);}el.addEventListener('pointermove',function(e){var r=el.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),d=Math.hypot(dx,dy);if(d<60){tx=dx*.24;ty=dy*.24;cancelAnimationFrame(raf);raf=requestAnimationFrame(animate);}});el.addEventListener('pointerleave',function(){tx=ty=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(animate);});});}
+/* ================= data: Open-Meteo ================= */
+const WX = {
+  data:null, updatedAt:null, live:false, timer:0,
+  URL:'https://api.open-meteo.com/v1/forecast?latitude=10.8231&longitude=106.6297&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&hourly=precipitation_probability,weather_code,temperature_2m&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FHo_Chi_Minh&forecast_days=2',
+  async load(){
+    try{
+      const r=await fetch(this.URL,{cache:'no-store'});
+      if(!r.ok) throw new Error('http '+r.status);
+      this.data=await r.json(); this.updatedAt=new Date(); this.live=true;
+      try{ localStorage.setItem('guongtroi',JSON.stringify({t:Date.now(),d:this.data})); }catch(e){}
+    }catch(e){
+      try{
+        const c=JSON.parse(localStorage.getItem('guongtroi'));
+        if(c&&c.d){ this.data=c.d; this.updatedAt=new Date(c.t); this.live=false; }
+      }catch(e2){}
+    }
+    return this.data;
+  },
+  start(onChange){
+    clearInterval(this.timer);
+    this.timer=setInterval(async ()=>{
+      const before=this.data&&this.data.current&&this.data.current.weather_code;
+      await this.load();
+      const after=this.data&&this.data.current&&this.data.current.weather_code;
+      if(before!==after) onChange();
+    }, 10*60*1000);
+  }
+};
+function sceneFor(code){
+  if(code===0||code===1) return 'sun';
+  if(code===2||code===3||code===45||code===48) return 'overcast';
+  if(code===95||code===96||code===99) return 'storm';
+  return 'rain';
+}
+function nightFactor(){
+  const d=WX.data; if(!d||!d.daily) return 0;
+  const sr=new Date(d.daily.sunrise[0]).getTime(), ss=new Date(d.daily.sunset[0]).getTime(), now=Date.now();
+  const M=30*60*1000;
+  if(now<sr-M||now>ss+M) return 1;
+  if(now>sr+M&&now<ss-M) return 0;
+  if(now<=sr+M) return 1-(now-(sr-M))/(2*M);
+  return (now-(ss-M))/(2*M);
+}
+function fmtTime(dt){ const d=dt instanceof Date?dt:new Date(dt); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
 
-      /* Rain that sings: three-state procedural rain / generative music */
-      var audioCtx=null,rainSource=null,rainFilter=null,rainGain=null,musicGain=null,musicDry=null,reverb=null,reverbWet=null,soundMode=0,currentAudioLevel=.03,pluckTimer=0;
-      function makeAudio(){if(audioCtx)return;var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;audioCtx=new AC();var length=audioCtx.sampleRate*4,buffer=audioCtx.createBuffer(2,length,audioCtx.sampleRate);for(var c=0;c<2;c++){var data=buffer.getChannelData(c),last=0;for(var i=0;i<length;i++){var white=Math.random()*2-1;last=.985*last+.015*white;data[i]=(white*.36+last*.64)*(.72+Math.random()*.28);}}rainSource=audioCtx.createBufferSource();rainSource.buffer=buffer;rainSource.loop=true;rainFilter=audioCtx.createBiquadFilter();rainFilter.type='bandpass';rainFilter.frequency.value=1800;rainFilter.Q.value=.42;rainGain=audioCtx.createGain();rainGain.gain.value=0;rainSource.connect(rainFilter).connect(rainGain).connect(audioCtx.destination);rainSource.start();musicGain=audioCtx.createGain();musicGain.gain.value=0;musicGain.connect(audioCtx.destination);musicDry=audioCtx.createGain();musicDry.gain.value=.58;musicDry.connect(musicGain);reverb=audioCtx.createConvolver();var impulse=audioCtx.createBuffer(2,audioCtx.sampleRate*2.8,audioCtx.sampleRate);for(var ch=0;ch<2;ch++){var id=impulse.getChannelData(ch);for(var j=0;j<id.length;j++)id[j]=(Math.random()*2-1)*Math.pow(1-j/id.length,2.5);}reverb.buffer=impulse;reverbWet=audioCtx.createGain();reverbWet.gain.value=.66;reverb.connect(reverbWet).connect(musicGain);schedulePluck();}
-      function pluck(){if(!audioCtx||soundMode!==2)return;var notes=[220,247,294,330,392,440,494,588],now=audioCtx.currentTime,osc=audioCtx.createOscillator(),filter=audioCtx.createBiquadFilter(),amp=audioCtx.createGain(),freq=notes[Math.floor(Math.random()*notes.length)];osc.type='triangle';osc.frequency.setValueAtTime(freq,now);osc.detune.setValueAtTime((Math.random()-.5)*12,now);filter.type='lowpass';filter.frequency.setValueAtTime(2600+Math.random()*1800,now);filter.frequency.exponentialRampToValueAtTime(420,now+1.4);amp.gain.setValueAtTime(.0001,now);amp.gain.exponentialRampToValueAtTime(.045+currentAudioLevel*.13,now+.008);amp.gain.exponentialRampToValueAtTime(.0001,now+1.65);osc.connect(filter).connect(amp);amp.connect(musicDry);amp.connect(reverb);osc.start(now);osc.stop(now+1.7);}
-      function schedulePluck(){clearTimeout(pluckTimer);var density=Math.max(.04,currentAudioLevel),wait=soundMode===2?(1150-Math.min(.34,density)*2300+Math.random()*720):520;pluckTimer=setTimeout(function(){if(soundMode===2){pluck();if(Math.random()<Math.min(.72,currentAudioLevel*1.8))setTimeout(pluck,80+Math.random()*160);}schedulePluck();},Math.max(160,wait));}
-      function thunderBoom(){if(!audioCtx||soundMode!==2)return;var now=audioCtx.currentTime,osc=audioCtx.createOscillator(),amp=audioCtx.createGain(),low=audioCtx.createBiquadFilter();osc.type='sine';osc.frequency.setValueAtTime(72,now);osc.frequency.exponentialRampToValueAtTime(31,now+.8);low.type='lowpass';low.frequency.value=120;amp.gain.setValueAtTime(.0001,now);amp.gain.exponentialRampToValueAtTime(.28,now+.018);amp.gain.exponentialRampToValueAtTime(.0001,now+1.25);osc.connect(low).connect(amp).connect(musicGain);osc.start(now);osc.stop(now+1.3);}
-      function setAudioLevel(level){currentAudioLevel=level;if(!rainGain||!audioCtx)return;var now=audioCtx.currentTime,rainTarget=soundMode===0?0:(soundMode===1?level:level*.58),musicTarget=soundMode===2?Math.min(.7,.32+level):0;rainGain.gain.cancelScheduledValues(now);musicGain.gain.cancelScheduledValues(now);rainGain.gain.setTargetAtTime(rainTarget,now,.24);musicGain.gain.setTargetAtTime(musicTarget,now,.24);}
-      var soundToggle=document.getElementById('soundToggle'),soundLabels=['Tắt','Tiếng mưa','Nhạc mưa'];soundToggle.addEventListener('click',function(){makeAudio();soundMode=(soundMode+1)%3;if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();var modeName=soundMode===0?'off':soundMode===1?'rain':'music';soundToggle.dataset.mode=modeName;soundToggle.setAttribute('aria-pressed',soundMode?'true':'false');soundToggle.setAttribute('aria-label',soundMode===0?'Âm thanh đang tắt. Nhấn để nghe tiếng mưa':soundMode===1?'Đang nghe tiếng mưa. Nhấn để nghe nhạc mưa':'Đang nghe nhạc mưa. Nhấn để tắt');soundToggle.childNodes[0].nodeValue='Âm thanh: '+soundLabels[soundMode];setAudioLevel(currentAudioLevel);schedulePluck();});
+/* ================= video stage (crossfade 2 lớp) ================= */
+class VideoStage{
+  constructor(o){
+    this.v=[o.vA,o.vB]; this.front=0; this.cur=null; this.pending=null;
+    this.poster=o.poster; this.grade=o.grade; this.stars=o.stars;
+    this.onShown=o.onShown||null;
+    this.v.forEach(v=>{ v.style.opacity='0'; v.muted=true; v.playsInline=true;
+      // chỉ ẩn poster khi video thật sự phát được frame; lỗi thì giữ poster
+      v.addEventListener('playing',()=>{ if(this.poster.dataset.for===v.dataset.src) this.poster.style.opacity='0'; });
+    });
+  }
+  show(name,instant){
+    if(this.cur===name&&!this.pending) return;
+    const def=ALL[name];
+    const src=def.video||null, poster=def.poster||def.img;
+    this.poster.dataset.for=src||'';
+    this.poster.src=poster; this.poster.style.opacity='1';
+    if(!src||RM){
+      this.v.forEach(v=>{ v.style.opacity='0'; try{v.pause()}catch(e){} });
+      this.cur=name; this.pending=null;
+      if(this.onShown) this.onShown(name);
+      return;
+    }
+    const back=1-this.front, V=this.v[back], old=this.v[this.front];
+    this.pending={name:name,layer:back};
+    if(V.dataset.src!==src){ V.dataset.src=src; V.src=src; V.load(); }
+    const go=(dur)=>{
+      if(!this.pending||this.pending.name!==name) return;
+      this.pending=null;
+      const tr=dur?('opacity '+dur+'s ease'):'none';
+      V.style.transition=tr; old.style.transition=tr;
+      V.style.opacity='1'; old.style.opacity='0';
+      if(dur&&!RM) V.play().catch(()=>{});
+      setTimeout(()=>{ try{old.pause()}catch(e){} }, dur?dur*1000+200:0);
+      this.cur=name; this.front=back;
+      if(this.onShown) this.onShown(name);
+    };
+    if(instant){ go(0); return; }
+    if(V.readyState>=3) go(1.6);
+    else{
+      let done=false;
+      const h=()=>{ if(done)return; done=true; V.removeEventListener('canplay',h); go(1.6); };
+      V.addEventListener('canplay',h);
+      setTimeout(h,5000);
+    }
+  }
+  setNight(f){
+    f=clamp(f,0,1);
+    if(this.grade) this.grade.style.opacity=String((f*0.62).toFixed(3));
+    if(this.stars) this.stars.style.opacity=String(clamp((f-0.35)/0.65,0,1).toFixed(3));
+  }
+}
+function drawStars(canvas){
+  const r=canvas.parentElement.getBoundingClientRect(), W=Math.max(300,r.width), H=Math.max(200,r.height);
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  const x=canvas.getContext('2d'); x.setTransform(DPR,0,0,DPR,0,0);
+  x.clearRect(0,0,W,H);
+  for(let i=0;i<150;i++){
+    x.fillStyle='rgba(255,255,255,'+rand(.2,.9).toFixed(2)+')';
+    x.beginPath(); x.arc(rand(0,W),rand(0,H*.7),rand(.4,1.4),0,TAU); x.fill();
+  }
+}
 
-      /* Navigation + section states */
-      dots.forEach(function(dot){dot.addEventListener('click',function(){var target=document.getElementById(dot.getAttribute('data-target'));if(target)target.scrollIntoView({behavior:reduce?'auto':'smooth'});});});
-      var timeAxis=document.getElementById('timeAxis'),timeMarks=[].slice.call(timeAxis.querySelectorAll('.time-mark'));
-      timeMarks.forEach(function(mark){mark.addEventListener('click',function(){var target=document.getElementById(mark.dataset.target);if(target)target.scrollIntoView({behavior:reduce?'auto':'smooth'});});});
-      function updateTimeAxis(){var start=document.getElementById('act1').offsetTop,end=document.getElementById('act4').offsetTop+document.getElementById('act4').offsetHeight-innerHeight,p=Math.max(0,Math.min(1,(scrollY-start)/Math.max(1,end-start)));timeAxis.style.setProperty('--time-progress',(p*100).toFixed(2)+'%');var times=[0,.4615,.6923,1],nearest=0,best=2;times.forEach(function(v,i){var d=Math.abs(p-v);if(d<best){best=d;nearest=i;}});timeMarks.forEach(function(m,i){m.classList.toggle('active',i===nearest);});}
-      function rollOdometer(el){if(el.dataset.rolled==='true')return;el.dataset.rolled='true';var n=el.querySelector('.odo-number'),target=Number(el.dataset.value),dec=String(el.dataset.value).indexOf('.')>-1?1:0;if(reduce){n.textContent=target.toFixed(dec);return;}n.textContent=(0).toFixed(dec);el.classList.add('rolling');var start;function tick(now){if(!start)start=now;var p=Math.min(1,(now-start)/760),e=1-Math.pow(1-p,4);n.textContent=(target*e).toFixed(dec);if(p<1)requestAnimationFrame(tick);else n.textContent=target.toFixed(dec);}setTimeout(function(){requestAnimationFrame(tick);},180);}
-      var revealObserver=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(!entry.isIntersecting)return;entry.target.classList.add('in-view');entry.target.querySelectorAll('.odometer').forEach(rollOdometer);});},{threshold:.2});acts.forEach(function(a){revealObserver.observe(a);});
-      var accents={cold:'#91dcff','storm-core':'#7fd4ff',act1:'#b8e2ee',act2:'#7bb6ff',act3:'#bdabff',act4:'#a7d5ec',districts:'#91dcff'},currentSection='cold',letterboxes=[].slice.call(document.querySelectorAll('.letterbox'));
-      function cinematicCut(){if(reduce)return;letterboxes.forEach(function(b){b.classList.remove('cut');void b.offsetWidth;b.classList.add('cut');});}
-      var navObserver=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(!entry.isIntersecting)return;var next=entry.target.id;if(next!==currentSection){currentSection=next;cinematicCut();}document.documentElement.style.setProperty('--accent',accents[next]||'#91dcff');setAudioLevel(Number(entry.target.dataset.audio||.03));dots.forEach(function(d){d.setAttribute('aria-current',d.dataset.target===next?'true':'false');});});},{rootMargin:'-43% 0px -43% 0px'});sections.forEach(function(s){navObserver.observe(s);});
+/* ================= fx overlay (lớp tương tác trên video) ================= */
+function blob(x,cx,cy,rx,ry,r,g,b,a){
+  const gr=x.createRadialGradient(cx,cy,0,cx,cy,Math.max(rx,1));
+  gr.addColorStop(0,'rgba('+r+','+g+','+b+','+a+')'); gr.addColorStop(1,'rgba('+r+','+g+','+b+',0)');
+  x.fillStyle=gr; x.save(); x.translate(cx,cy); x.scale(1,Math.max(ry,1)/Math.max(rx,1)); x.translate(-cx,-cy);
+  x.fillRect(cx-rx,cy-rx,rx*2,rx*2); x.restore();
+}
+function rainInit(st,W,H,n){ st.drops=[]; for(let i=0;i<n;i++) st.drops.push({x:rand(0,W),y:rand(0,H),len:rand(9,26),spd:rand(9,20),op:rand(.14,.5)}); }
+function rainDraw(x,st,W,H,o){
+  x.lineWidth=1.1;
+  for(const p of st.drops){
+    p.y+=p.spd*o.fall; p.x+=o.wind;
+    let op=p.op*o.alpha;
+    if(o.eye){ const dx=p.x-o.eye.x,dy=p.y-o.eye.y,d=Math.hypot(dx,dy);
+      if(d<o.eye.r&&d>1){ const push=(1-d/o.eye.r)*3.4; p.x+=dx/d*push; p.y+=dy/d*push; op*=0.12+0.88*(d/o.eye.r); } }
+    if(p.y>H+30){ p.y=-30; p.x=rand(-40,W); if(o.splash) o.splash(p.x); }
+    if(p.x>W+30) p.x=-30;
+    x.strokeStyle='rgba(174,216,255,'+op.toFixed(3)+')';
+    x.beginPath(); x.moveTo(p.x,p.y); x.lineTo(p.x-o.wind*2.4,p.y-p.len); x.stroke();
+  }
+}
+function boltPts(x1,y1,x2,y2,d){
+  let pts=[[x1,y1],[x2,y2]];
+  for(let k=0;k<5;k++){ const out=[pts[0].slice()];
+    for(let i=1;i<pts.length;i++){ const mx=(pts[i-1][0]+pts[i][0])/2,my=(pts[i-1][1]+pts[i][1])/2;
+      out.push([mx+rand(-d,d),my+rand(-d,d)*.35]); out.push(pts[i].slice()); }
+    pts=out; d*=.55; }
+  return pts;
+}
+function drawBolt(x,pts,w,alpha){
+  x.save(); x.globalAlpha=Math.max(0,alpha); x.strokeStyle='#eaf6ff'; x.lineWidth=w; x.lineJoin='round';
+  x.shadowColor='#bfe3ff'; x.shadowBlur=24; x.beginPath();
+  pts.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])); x.stroke(); x.restore();
+}
+const FX = {
+  dust:{ // nắng
+    enter(st,W,H){ st.m=[]; for(let i=0;i<46;i++) st.m.push({x:rand(0,W),y:rand(0,H),r:rand(1,3),vx:rand(-.3,.3),vy:rand(-.2,.2),op:rand(.1,.4)}); },
+    frame(x,W,H,t,dt,P,st){
+      for(const m of st.m){ m.x+=m.vx; m.y+=m.vy; if(m.x<0)m.x=W; if(m.x>W)m.x=0; if(m.y<0)m.y=H; if(m.y>H)m.y=0;
+        x.fillStyle='rgba(255,244,214,'+m.op.toFixed(2)+')'; x.beginPath(); x.arc(m.x,m.y,m.r,0,TAU); x.fill(); }
+      if(P.x>-100){ const fl=[[26,.10],[14,.13],[44,.06],[18,.10]];
+        for(const f of fl) blob(x,P.x,P.y,f[0],f[0],255,250,230,f[1]);
+        x.strokeStyle='rgba(255,252,240,.5)'; x.lineWidth=1.5; x.beginPath(); x.arc(P.x,P.y,16,0,TAU); x.stroke(); }
+    }},
+  mist:{ // âm u
+    enter(){},
+    frame(x,W,H,t,dt,P,st){
+      for(let i=0;i<3;i++){ const y=H*(0.3+i*0.22)+Math.sin(t*0.3+i)*20;
+        const mg=x.createLinearGradient(0,y-30,0,y+30);
+        mg.addColorStop(0,'rgba(200,208,216,0)'); mg.addColorStop(.5,'rgba(200,208,216,.07)'); mg.addColorStop(1,'rgba(200,208,216,0)');
+        x.fillStyle=mg; x.fillRect(0,y-30,W,60); }
+    }},
+  rain:{
+    enter(st,W,H){ rainInit(st,W,H,Math.round(W*H/8500)); st.sp=[]; },
+    frame(x,W,H,t,dt,P,st,S){
+      const eye=(P.x>-100)?{x:P.x,y:P.y,r:140}:null;
+      rainDraw(x,st,W,H,{wind:1.2,fall:1,alpha:.85,eye:eye,
+        splash:function(px){ if(st.sp.length<50)st.sp.push({x:px,y:H-8,vx:rand(-2,2),vy:rand(-4,-1.5),life:1}); }});
+      for(let i=st.sp.length-1;i>=0;i--){ const s=st.sp[i]; s.x+=s.vx; s.y+=s.vy; s.vy+=.25; s.life-=dt*2.4;
+        if(s.life<=0){st.sp.splice(i,1);continue;}
+        x.strokeStyle='rgba(174,216,255,'+(s.life*.5).toFixed(3)+')'; x.lineWidth=1;
+        x.beginPath(); x.arc(s.x,s.y,3,Math.PI,TAU); x.stroke(); }
+    }},
+  storm:{
+    enter(st,W,H){ rainInit(st,W,H,Math.round(W*H/7000)); st.bolts=[]; st.flash=0; },
+    frame(x,W,H,t,dt,P,st,S){
+      rainDraw(x,st,W,H,{wind:3,fall:1,alpha:.9,eye:null,splash:null});
+      for(let i=st.bolts.length-1;i>=0;i--){ const b=st.bolts[i]; b.life-=dt*3.2;
+        if(b.life<=0){st.bolts.splice(i,1);continue;} drawBolt(x,b.pts,2.6,b.life); }
+      if(st.flash>0){ x.fillStyle='rgba(215,232,255,'+(st.flash*.30).toFixed(3)+')'; x.fillRect(0,0,W,H); st.flash-=dt*2.4; }
+    },
+    tap(st,px,py,S){ st.bolts.push({pts:boltPts(px+rand(-30,30),-20,px,py,80),life:1}); st.flash=1; if(AU.on)AU.thunder(.9); }},
+  tornado:{
+    enter(st,W,H){ st.debris=[]; for(let i=0;i<70;i++)st.debris.push({a:rand(0,TAU),r:rand(30,280),y:rand(H*.12,H*.86),s:rand(2,6),o:rand(.3,.8)}); st.swirl=1; },
+    frame(x,W,H,t,dt,P,st,S){
+      const cx=W*.5+Math.sin(t*.45)*36;
+      const prox=(P.x>-100)?Math.max(0,1-Math.hypot(P.x-cx,P.y-H*.5)/380):0;
+      st.swirl=lerp(st.swirl,1+prox*2.4,.06);
+      for(let i=0;i<14;i++){ const f=i/13,y=H*.06+f*H*.78;
+        const w=(215*(1-f)+30)*(1+.07*Math.sin(t*3.2+i*.7));
+        const ex=cx+Math.sin(t*1.8+i*.55)*w*.10;
+        x.strokeStyle='rgba(206,214,218,'+(.30-.11*f).toFixed(3)+')'; x.lineWidth=8;
+        x.beginPath(); x.ellipse(ex,y,w/2,13,0,0,TAU); x.stroke(); }
+      for(const d of st.debris){ d.a+=dt*(1.7+72/Math.max(d.r,46))*st.swirl;
+        const ex=cx+Math.cos(d.a)*d.r*.85, ey=d.y+Math.sin(d.a)*d.r*.10;
+        x.fillStyle='rgba(20,22,20,'+d.o.toFixed(2)+')'; x.fillRect(ex,ey,d.s,d.s*.6); }
+    },
+    tap(st,px,py,S){ for(let i=0;i<12;i++)st.debris.push({a:rand(0,TAU),r:rand(190,310),y:py+rand(-50,50),s:rand(2,7),o:rand(.4,.9)});
+      if(st.debris.length>170)st.debris.splice(0,st.debris.length-170); }},
+  typhoon:{
+    enter(st,W,H){ rainInit(st,W,H,Math.round(W*H/6500)); st.stk=[]; for(let i=0;i<12;i++)st.stk.push({x:rand(0,W),y:rand(0,H),vx:rand(500,900),len:rand(40,120)}); st.gust=1; },
+    frame(x,W,H,t,dt,P,st,S){
+      rainDraw(x,st,W,H,{wind:7*st.gust,fall:1.1,alpha:.9,eye:null,splash:null});
+      x.strokeStyle='rgba(190,210,225,.3)'; x.lineWidth=2;
+      for(const s of st.stk){ s.x-=s.vx*st.gust*dt; if(s.x<-s.len){s.x=W+rand(0,200);s.y=rand(0,H);}
+        x.beginPath(); x.moveTo(s.x,s.y); x.lineTo(s.x+s.len,s.y-s.len*.12); x.stroke(); }
+      st.gust=lerp(st.gust,1,.04);
+    },
+    tap(st,px,py,S){ st.gust=2.2; if(AU.on&&AU.typhoonSet)AU.typhoonSet(12); setTimeout(()=>{if(AU.on&&AU.typhoonSet)AU.typhoonSet(10)},900); }},
+  flood:{
+    enter(st,W,H){ st.rip=[]; },
+    frame(x,W,H,t,dt,P,st,S){
+      const wy=H*.62;
+      if(Math.random()<dt*5&&st.rip.length<24) st.rip.push({x:rand(0,W),y:wy+rand(10,H-wy-10),r:4,life:1});
+      for(let i=st.rip.length-1;i>=0;i--){ const r=st.rip[i]; r.r+=dt*44; r.life-=dt*.85;
+        if(r.life<=0){st.rip.splice(i,1);continue;}
+        x.strokeStyle='rgba(160,205,235,'+(r.life*.45).toFixed(3)+')'; x.lineWidth=1.4;
+        x.beginPath(); x.ellipse(r.x,r.y,r.r,r.r*.30,0,0,TAU); x.stroke(); }
+    },
+    tap(st,px,py,S){ for(let i=0;i<3;i++)st.rip.push({x:px+rand(-34,34),y:py+rand(-8,8),r:6+i*9,life:1}); }}
+};
+class FXEngine{
+  constructor(canvas,root){
+    this.c=canvas; this.x=canvas.getContext('2d'); this.root=root;
+    this.P={x:-9999,y:-9999,down:false}; this.sys=null; this.st={};
+    this.running=false; this.raf=0; this.W=0; this.H=0;
+    const R=e=>{ const r=root.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top}; };
+    root.addEventListener('pointermove',e=>{ const p=R(e); this.P.x=p.x; this.P.y=p.y; },{passive:true});
+    root.addEventListener('pointerdown',e=>{ const p=R(e); this.P.x=p.x; this.P.y=p.y; this.P.down=true;
+      const f=this.sys&&FX[this.sys].tap; if(f) f(this.st,p.x,p.y,this); });
+    root.addEventListener('pointerup',()=>{this.P.down=false;},{passive:true});
+    root.addEventListener('pointercancel',()=>{this.P.down=false;},{passive:true});
+    root.addEventListener('pointerleave',()=>{this.P.x=-9999;this.P.y=-9999;this.P.down=false;},{passive:true});
+    this.resize();
+  }
+  resize(){
+    const r=this.root.getBoundingClientRect();
+    this.W=Math.max(300,r.width); this.H=Math.max(200,r.height);
+    this.c.width=Math.round(this.W*DPR); this.c.height=Math.round(this.H*DPR);
+    this.x.setTransform(DPR,0,0,DPR,0,0);
+    if(this.sys) FX[this.sys].enter(this.st,this.W,this.H);
+  }
+  setSystem(name){
+    this.sys=name; this.st={};
+    if(name&&FX[name]) FX[name].enter(this.st,this.W,this.H);
+  }
+  start(){
+    if(this.running||RM) return;
+    this.running=true; let last=performance.now();
+    const loop=now=>{ if(!this.running)return;
+      const dt=Math.min(.05,(now-last)/1000); last=now;
+      const f=this.sys&&FX[this.sys];
+      this.x.clearRect(0,0,this.W,this.H);
+      if(f) f.frame(this.x,this.W,this.H,now/1000,dt,this.P,this.st,this);
+      this.raf=requestAnimationFrame(loop); };
+    this.raf=requestAnimationFrame(loop);
+  }
+  stop(){ this.running=false; cancelAnimationFrame(this.raf); }
+}
+function watchFX(fx,el){
+  if(RM) return;
+  new IntersectionObserver(es=>{ es.forEach(e=>{ e.isIntersecting?fx.start():fx.stop(); }); },{threshold:.05}).observe(el);
+}
 
-      /* Ethan Vale: 16 photo cards mapped onto a Fibonacci sphere. */
-      var stormCore=document.getElementById('storm-core'),stormStage=document.getElementById('stormSphereStage'),stormSphere=document.getElementById('stormPhotoSphere'),stormCopy=document.getElementById('stormCoreCopy'),stormScrubber=document.getElementById('stormScrubber'),stormReadout=document.getElementById('stormTimeReadout'),stormData=document.getElementById('stormTimeData');
-      var stormRain=[0,0,0,0,0,0,0,0,.1,.1,.2,.3,.6,.8,1,1.1,.9,.5,.2,.1,.1,0,0,0],stormChance=[8,7,6,5,5,7,12,16,20,24,32,42,57,63,68,71,66,54,38,28,22,16,12,9],stormHour=15,stormIntensity=1;
-      var cardHours=[0,2,4,6,8,10,11,12,13,14,15,16,17,18,20,22],cardImages=['assets/storm-image-2.webp','assets/storm-image-3.webp','assets/storm-image-4.webp','assets/storm-image-5.webp'],cardAlts=['Mây bão cuộn trên bầu trời','Tia sét xuyên qua tầng mây','Đường phố Sài Gòn trong mưa','Màn mưa trắng xóa trước thành phố'];
-      var cardPoems=['Mái hiên còn giữ tiếng mưa hôm qua.','Một chiếc xe khuya xé đôi mặt nước.','Mây thấp chạm vào những nóc nhà im.','Sương còn ngái ngủ trên mái tôn.','Hàng cây thử nghiêng về phía gió.','Mùi nhựa nóng chờ cơn mưa tới.','Bóng mây trườn qua vai thành phố.','Bữa trưa nghe trời đổi giọng.','Gió gom lá khô về một góc phố.','Ban công kéo vội quần áo vào nhà.','Trời đổ ập như ai hất cả xô nước.','Hẻm nhỏ đầy lên những tiếng dép chạy.','Nước tìm đường qua từng miệng cống.','Mưa mỏng dần sau lưng dòng xe.','Quán nhỏ hong ghế dưới mái hiên.','Thành phố khép cửa, nước vẫn đi.'];
-      var sphereCards=[],sphereRotX=-.08,sphereRotY=.26,sphereVelX=0,sphereVelY=0,sphereDown=false,sphereDragging=false,spherePointer=-1,sphereLastX=0,sphereLastY=0,sphereStartX=0,sphereStartY=0,sphereVisible=false,sphereRAF=0,sphereLastFrame=0,sphereAuto=null,suppressCardClick=false,detailOpen=false;
-      var scrubDown=false,scrubStartX=0,scrubLastX=0,scrubValue=15,scrubVelocity=0,scrubFrame=0;
-      var golden=Math.PI*(3-Math.sqrt(5));
-      cardHours.forEach(function(hour,i){var y=1-2*(i+.5)/cardHours.length,radial=Math.sqrt(Math.max(0,1-y*y)),theta=i*golden,card=document.createElement('button'),img=document.createElement('img'),meta=document.createElement('span'),time=document.createElement('strong'),chance=document.createElement('span');card.className='storm-photo-card';card.type='button';card.dataset.hour=hour;card.setAttribute('aria-label',String(hour).padStart(2,'0')+' giờ, '+stormChance[hour]+' phần trăm mưa. Mở chi tiết.');img.src=cardImages[i%cardImages.length];img.alt=cardAlts[i%cardAlts.length];img.draggable=false;meta.className='storm-photo-meta';time.textContent=String(hour).padStart(2,'0')+':00';chance.textContent=stormChance[hour]+'% mưa';meta.appendChild(time);meta.appendChild(chance);card.appendChild(img);card.appendChild(meta);card._sphere={x:Math.cos(theta)*radial,y:y,z:Math.sin(theta)*radial,hour:hour,index:i};card.addEventListener('click',function(e){if(suppressCardClick){e.preventDefault();return;}openStormDetail(card);});stormSphere.appendChild(card);sphereCards.push(card);});
-      for(var sh=0;sh<24;sh++){var tick=document.createElement('button'),label=document.createElement('span');tick.className='storm-tick'+(sh===15?' active':'');tick.type='button';tick.dataset.hour=sh;tick.setAttribute('aria-label',String(sh).padStart(2,'0')+':00');label.textContent=String(sh).padStart(2,'0');tick.appendChild(label);tick.addEventListener('click',function(e){e.stopPropagation();setStormHour(Number(this.dataset.hour));});stormScrubber.appendChild(tick);}
-      var stormTicks=[].slice.call(stormScrubber.children);
-      function nearestStormCard(hour){var best=sphereCards[0],dist=99;sphereCards.forEach(function(card){var d=Math.abs(card._sphere.hour-hour);d=Math.min(d,24-d);if(d<dist){dist=d;best=card;}});return best;}
-      function angleNear(from,to){while(to-from>Math.PI)to-=Math.PI*2;while(to-from<-Math.PI)to+=Math.PI*2;return to;}
-      function rotateSphereToHour(hour){if(reduce)return;var point=nearestStormCard(hour)._sphere,targetY=Math.atan2(-point.x,point.z),z1=Math.sqrt(point.x*point.x+point.z*point.z),targetX=Math.atan2(point.y,z1),now=performance.now();targetY=angleNear(sphereRotY,targetY);sphereAuto={sx:sphereRotX,sy:sphereRotY,tx:targetX,ty:targetY,start:now,duration:800};sphereVelX=sphereVelY=0;wakeSphere();}
-      function setStormHour(hour,preserveScrub){stormHour=Math.max(0,Math.min(23,Math.round(hour)));if(!preserveScrub)scrubValue=stormHour;stormIntensity=Math.max(0,Math.min(1,stormRain[stormHour]/1.1));stormCore.style.setProperty('--storm-intensity',stormIntensity.toFixed(3));stormReadout.textContent=String(stormHour).padStart(2,'0')+':00';stormData.textContent=stormRain[stormHour].toFixed(1)+' mm · '+stormChance[stormHour]+'%';stormScrubber.setAttribute('aria-valuenow',stormHour);stormScrubber.setAttribute('aria-valuetext',stormHour+' giờ, '+stormRain[stormHour].toFixed(1)+' milimét, '+stormChance[stormHour]+' phần trăm mưa');stormTicks.forEach(function(t,i){t.classList.toggle('active',i===stormHour);});rotateSphereToHour(stormHour);}
-      function sphereRadius(){var r=stormStage.getBoundingClientRect();return innerWidth<=760?Math.min(r.width*.33,r.height*.35,190):Math.min(r.width*.35,r.height*.38,285);}
-      function updateSphereCards(){if(reduce)return;var R=sphereRadius(),cx=Math.cos(sphereRotX),sx=Math.sin(sphereRotX),cy=Math.cos(sphereRotY),sy=Math.sin(sphereRotY),front=null,frontZ=-999;sphereCards.forEach(function(card){var p=card._sphere,x1=p.x*cy+p.z*sy,z1=-p.x*sy+p.z*cy,y2=p.y*cx-z1*sx,z2=p.y*sx+z1*cx,depth=(z2+1)/2,scale=.82+depth*.18;if(z2>frontZ){frontZ=z2;front=card;}card._depth=depth;card.style.transform='translate3d('+(x1*R).toFixed(2)+'px,'+(y2*R).toFixed(2)+'px,'+(z2*R).toFixed(2)+'px) translate(-50%,-50%) scale('+scale.toFixed(3)+')';card.style.filter='brightness('+(0.25+depth*.75).toFixed(3)+') saturate('+(0.55+depth*.45).toFixed(3)+')';card.style.opacity=(.45+depth*.55).toFixed(3);card.style.zIndex=String(Math.round(10+depth*60));card.tabIndex=depth>.54?0:-1;});sphereCards.forEach(function(card){card.classList.toggle('is-front',card===front);});if(front)front.style.transform=front.style.transform.replace(/scale\([^)]*\)$/,'scale(1.06)');}
-      function renderSphere(now){if(!sphereVisible||detailOpen){sphereRAF=0;return;}var dt=sphereLastFrame?Math.min(34,now-sphereLastFrame):16;sphereLastFrame=now;if(sphereAuto&&!sphereDragging){var p=Math.min(1,(now-sphereAuto.start)/sphereAuto.duration),e=1-Math.pow(1-p,4);sphereRotX=sphereAuto.sx+(sphereAuto.tx-sphereAuto.sx)*e;sphereRotY=sphereAuto.sy+(sphereAuto.ty-sphereAuto.sy)*e;if(p>=1)sphereAuto=null;}else if(!sphereDragging){sphereVelX*=Math.pow(.94,dt/16);sphereVelY*=Math.pow(.94,dt/16);sphereRotX+=sphereVelX; sphereRotY+=sphereVelY;if(Math.abs(sphereVelX)<.00015&&Math.abs(sphereVelY)<.00015){sphereVelX=sphereVelY=0;sphereRotX+=(Math.sin(now*.00035)*.08-sphereRotX)*.003;sphereRotY+=.00085*dt/16;}}sphereRotX=Math.max(-1.15,Math.min(1.15,sphereRotX));updateSphereCards();if(!sphereDragging){var relax=.08,rx=Number(stormCopy.dataset.rx||0),ry=Number(stormCopy.dataset.ry||0);rx+=(0-rx)*relax;ry+=(0-ry)*relax;stormCopy.dataset.rx=rx;stormCopy.dataset.ry=ry;stormCopy.style.transform='translate(-50%,-50%) translateZ(52px) rotateX('+rx.toFixed(2)+'deg) rotateY('+ry.toFixed(2)+'deg)';}sphereRAF=requestAnimationFrame(renderSphere);}
-      function wakeSphere(){if(!reduce&&!sphereRAF&&sphereVisible&&!detailOpen){sphereLastFrame=0;sphereRAF=requestAnimationFrame(renderSphere);}}
-      function beginSphereDrag(e){if(reduce||detailOpen||e.button!==undefined&&e.button!==0)return;sphereDown=true;sphereDragging=false;spherePointer=e.pointerId;sphereStartX=sphereLastX=e.clientX;sphereStartY=sphereLastY=e.clientY;sphereVelX=sphereVelY=0;sphereAuto=null;stormStage.setPointerCapture(e.pointerId);}
-      function moveSphereDrag(e){if(!sphereDown||e.pointerId!==spherePointer||reduce)return;var dx=e.clientX-sphereLastX,dy=e.clientY-sphereLastY,totalX=e.clientX-sphereStartX,totalY=e.clientY-sphereStartY;if(!sphereDragging&&Math.hypot(totalX,totalY)>6){sphereDragging=true;suppressCardClick=true;stormStage.classList.add('is-dragging');}if(!sphereDragging)return;e.preventDefault();sphereRotY+=dx*.006;sphereRotX=Math.max(-1.15,Math.min(1.15,sphereRotX-dy*.006));sphereVelY=dx*.0009;sphereVelX=-dy*.0009;var tiltY=Math.max(-3,Math.min(3,-dx*.15)),tiltX=Math.max(-3,Math.min(3,dy*.15));stormCopy.dataset.rx=tiltX;stormCopy.dataset.ry=tiltY;stormCopy.style.transform='translate(-50%,-50%) translateZ(52px) rotateX('+tiltX.toFixed(2)+'deg) rotateY('+tiltY.toFixed(2)+'deg)';sphereLastX=e.clientX;sphereLastY=e.clientY;wakeSphere();}
-      function endSphereDrag(e){if(!sphereDown||e.pointerId!==spherePointer)return;var dragged=sphereDragging;sphereDown=false;sphereDragging=false;spherePointer=-1;stormStage.classList.remove('is-dragging');if(dragged)setTimeout(function(){suppressCardClick=false;},0);wakeSphere();}
-      stormStage.addEventListener('pointerdown',beginSphereDrag);stormStage.addEventListener('pointermove',moveSphereDrag);stormStage.addEventListener('pointerup',endSphereDrag);stormStage.addEventListener('pointercancel',function(e){sphereDown=false;sphereDragging=false;spherePointer=-1;stormStage.classList.remove('is-dragging');setTimeout(function(){suppressCardClick=false;},0);wakeSphere();});
-      if(reduce){updateSphereCards();}else{var sphereObserver=new IntersectionObserver(function(entries){entries.forEach(function(entry){sphereVisible=entry.isIntersecting;if(sphereVisible)wakeSphere();else if(sphereRAF){cancelAnimationFrame(sphereRAF);sphereRAF=0;}});},{rootMargin:'25% 0px 25%'});sphereObserver.observe(stormCore);addEventListener('resize',updateSphereCards,{passive:true});}
+/* ================= app wiring ================= */
+let heroStage=null, heroFX=null, lbStage=null, lbFX=null;
+let currentScene='storm', travelScene=null;
+const TICK_COLORS={sun:'linear-gradient(180deg,#fcd34d,#f59e0b)',overcast:'linear-gradient(180deg,#9aa4b2,#5b6472)',rain:'linear-gradient(180deg,#7db4f0,#2f6fd0)',storm:'linear-gradient(180deg,#c4b5fd,#7c5cf0)'};
+const CODE_DESC={0:'quang đãng',1:'gần như quang',2:'ít mây',3:'nhiều mây',45:'sương mù',48:'sương mù',51:'mưa phùn',53:'mưa phùn',55:'mưa phùn',61:'mưa',63:'mưa',65:'mưa to',80:'mưa rào',81:'mưa rào',82:'mưa rào mạnh',95:'giông',96:'giông',99:'giông mạnh'};
 
-      /* Photo-card FLIP detail panel. */
-      var stormLightbox=document.getElementById('stormCardLightbox'),stormPanel=document.getElementById('stormDetailPanel'),stormDetailImage=document.getElementById('stormDetailImage'),stormDetailHour=document.getElementById('stormDetailHour'),stormDetailChance=document.getElementById('stormDetailChance'),stormDetailRain=document.getElementById('stormDetailRain'),stormDetailPoem=document.getElementById('stormDetailPoem'),stormDetailClose=document.getElementById('stormDetailClose'),selectedStormCard=null,detailCloseTimer=0;
-      function openStormDetail(card){if(detailOpen)return;selectedStormCard=card;detailOpen=true;if(sphereRAF){cancelAnimationFrame(sphereRAF);sphereRAF=0;}var hour=card._sphere.hour,source=card.getBoundingClientRect();stormDetailImage.src=card.querySelector('img').src;stormDetailImage.alt=card.querySelector('img').alt;stormDetailHour.textContent=String(hour).padStart(2,'0')+':00';stormDetailChance.textContent=stormChance[hour]+'%';stormDetailRain.textContent=stormRain[hour].toFixed(1)+' mm';stormDetailPoem.textContent=cardPoems[card._sphere.index];stormLightbox.hidden=false;stormPanel.style.transition='none';stormPanel.style.transform='none';stormPanel.style.opacity='0';stormLightbox.getBoundingClientRect();var target=stormPanel.getBoundingClientRect(),dx=source.left-target.left,dy=source.top-target.top,scaleX=source.width/Math.max(1,target.width),scaleY=source.height/Math.max(1,target.height);stormPanel.style.transform='translate('+dx.toFixed(2)+'px,'+dy.toFixed(2)+'px) scale('+scaleX.toFixed(4)+','+scaleY.toFixed(4)+')';requestAnimationFrame(function(){stormLightbox.classList.add('open');stormPanel.style.transition='';stormPanel.style.opacity='1';stormPanel.style.transform='none';});setTimeout(function(){stormDetailClose.focus();},620);}
-      function closeStormDetail(){if(!detailOpen)return;clearTimeout(detailCloseTimer);var panelRect=stormPanel.getBoundingClientRect(),target=selectedStormCard?selectedStormCard.getBoundingClientRect():panelRect,dx=target.left-panelRect.left,dy=target.top-panelRect.top,scaleX=target.width/Math.max(1,panelRect.width),scaleY=target.height/Math.max(1,panelRect.height);stormLightbox.classList.remove('open');stormPanel.style.transform='translate('+dx.toFixed(2)+'px,'+dy.toFixed(2)+'px) scale('+scaleX.toFixed(4)+','+scaleY.toFixed(4)+')';stormPanel.style.opacity='.25';detailCloseTimer=setTimeout(function(){stormLightbox.hidden=true;stormPanel.style.transition='none';stormPanel.style.transform='none';stormPanel.style.opacity='1';detailOpen=false;if(selectedStormCard)selectedStormCard.focus();selectedStormCard=null;requestAnimationFrame(function(){stormPanel.style.transition='';wakeSphere();});},590);}
-      stormDetailClose.addEventListener('click',closeStormDetail);stormLightbox.addEventListener('click',function(e){if(e.target===stormLightbox)closeStormDetail();});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&detailOpen)closeStormDetail();});
+function skyFlash(msg){
+  const el=document.getElementById('skyFlash');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),3200);
+}
+function setSceneTag(txt){ document.getElementById('sceneName').textContent=txt; }
 
-      /* The compact 24-hour scrubber still steers the nearest photo to the front. */
-      stormScrubber.addEventListener('pointerdown',function(e){scrubDown=true;scrubStartX=scrubLastX=e.clientX;scrubValue=stormHour;scrubVelocity=0;cancelAnimationFrame(scrubFrame);stormScrubber.setPointerCapture(e.pointerId);});stormScrubber.addEventListener('pointermove',function(e){if(!scrubDown)return;var dx=e.clientX-scrubLastX,width=Math.max(1,stormScrubber.clientWidth);if(Math.abs(e.clientX-scrubStartX)>5)e.preventDefault();scrubValue=Math.max(0,Math.min(23,scrubValue-dx/width*23));scrubVelocity=-dx/width*23;scrubLastX=e.clientX;setStormHour(scrubValue,true);});
-      function scrubMomentum(){if(reduce){scrubVelocity=0;return;}scrubVelocity*=.94;scrubValue=Math.max(0,Math.min(23,scrubValue+scrubVelocity));setStormHour(scrubValue,true);if(Math.abs(scrubVelocity)>.015&&scrubValue>0&&scrubValue<23)scrubFrame=requestAnimationFrame(scrubMomentum);}
-      stormScrubber.addEventListener('pointerup',function(){if(!scrubDown)return;scrubDown=false;scrubValue=stormHour;if(Math.abs(scrubVelocity)>.015)scrubFrame=requestAnimationFrame(scrubMomentum);});stormScrubber.addEventListener('pointercancel',function(){scrubDown=false;});stormScrubber.addEventListener('keydown',function(e){if(e.key==='ArrowLeft'||e.key==='ArrowDown'){e.preventDefault();setStormHour(stormHour-1);}if(e.key==='ArrowRight'||e.key==='ArrowUp'){e.preventDefault();setStormHour(stormHour+1);}if(e.key==='Home'){e.preventDefault();setStormHour(0);}if(e.key==='End'){e.preventDefault();setStormHour(23);}});setStormHour(15);
+function applySceneToHero(name,why){
+  currentScene=name; travelScene=null;
+  const def=SCENES[name];
+  heroStage.show(name,false);
+  heroFX.setSystem(def.fx);
+  setSceneTag((WX.live?'TRỰC TIẾP · ':'BẢN TĨNH · ')+def.label.toUpperCase());
+  AU.setScene(name);
+  document.getElementById('backNow').classList.remove('show');
+  if(why) skyFlash(why);
+}
+function showTravel(i){
+  const d=WX.data; if(!d) return;
+  const code=d.hourly.weather_code[i], sc=sceneFor(code), def=SCENES[sc];
+  travelScene=sc;
+  heroStage.show(sc,false);
+  heroFX.setSystem(def.fx);
+  setSceneTag('DU HÀNH · '+def.label.toUpperCase());
+  AU.setScene(sc);
+  const hh=d.hourly.time[i].slice(11,16);
+  document.getElementById('fsRead').textContent=hh+' · '+def.label+' · '+Math.round(d.hourly.temperature_2m[i])+'° · '+d.hourly.precipitation_probability[i]+'%';
+  document.getElementById('backNow').classList.add('show');
+  document.getElementById('fsTrack').setAttribute('aria-valuenow',String(i));
+  document.getElementById('fsTrack').setAttribute('aria-valuetext',hh+' '+def.label);
+  Array.from(document.getElementById('fsTicks').children).forEach((t,j)=>t.classList.toggle('sel',j===i));
+  document.getElementById('fsThumb').style.left=(i/23*100)+'%';
+  document.getElementById('fsFill').style.width=(i/23*100)+'%';
+}
 
-      /* Press-hold summon */
-      var coldOpen=document.getElementById('cold'),coldTitle=coldOpen.querySelector('.cold-title'),holdButton=document.getElementById('holdRain'),holdRing=holdButton.querySelector('.hold-ring'),holdStart=0,holdFrame=0,holdPointer=null;
-      if(!reduce){coldOpen.addEventListener('pointermove',function(e){var r=coldOpen.getBoundingClientRect(),nx=(e.clientX-r.left)/r.width,ny=(e.clientY-r.top)/r.height;coldOpen.style.setProperty('--aperture-x',(58+nx*26).toFixed(2)+'%');coldOpen.style.setProperty('--aperture-y',(25+ny*25).toFixed(2)+'%');coldOpen.style.setProperty('--cold-x',((nx-.5)*-22).toFixed(1)+'px');coldOpen.style.setProperty('--cold-y',((ny-.5)*-14).toFixed(1)+'px');coldOpen.style.setProperty('--title-x',((nx-.5)*12).toFixed(1)+'px');coldOpen.style.setProperty('--title-y',((ny-.5)*8).toFixed(1)+'px');coldOpen.style.setProperty('--title-rx',((.5-ny)*2.4).toFixed(2)+'deg');coldOpen.style.setProperty('--title-ry',((nx-.5)*-3.5).toFixed(2)+'deg');},{passive:true});}
-      function resetHold(){cancelAnimationFrame(holdFrame);holdStart=0;holdButton.classList.remove('charging');holdRing.style.setProperty('--charge','0deg');coldOpen.style.setProperty('--aperture-size','22%');}
-      function triggerStorm(){resetHold();whiteFlash.classList.remove('flash');void whiteFlash.offsetWidth;whiteFlash.classList.add('flash');setTimeout(function(){document.getElementById('storm-core').scrollIntoView({behavior:reduce?'auto':'smooth'});},150);}
-      function charge(now){if(!holdStart)holdStart=now;var p=Math.min(1,(now-holdStart)/1200),e=1-Math.pow(1-p,3);holdRing.style.setProperty('--charge',(p*360).toFixed(1)+'deg');coldOpen.style.setProperty('--aperture-size',(22+e*70).toFixed(1)+'%');if(p>=1)triggerStorm();else holdFrame=requestAnimationFrame(charge);}
-      holdButton.addEventListener('pointerdown',function(e){holdPointer=e.pointerId;holdButton.setPointerCapture(e.pointerId);holdButton.classList.add('charging');holdFrame=requestAnimationFrame(charge);});holdButton.addEventListener('pointerup',function(e){if(e.pointerId===holdPointer)resetHold();});holdButton.addEventListener('pointercancel',resetHold);holdButton.addEventListener('keydown',function(e){if((e.key===' '||e.key==='Enter')&&!holdStart){e.preventDefault();holdButton.classList.add('charging');holdFrame=requestAnimationFrame(charge);}});holdButton.addEventListener('keyup',function(e){if(e.key===' '||e.key==='Enter')resetHold();});
+function renderLive(){
+  const d=WX.data; if(!d) return false;
+  const c=d.current, maxPop=d.daily.precipitation_probability_max[0];
+  const raining=maxPop>=40;
+  document.getElementById('verdictTitle').innerHTML='Hôm nay, Sài Gòn '+(raining?'<span class="yes">có mưa.</span>':'<span class="no">không mưa.</span>');
+  const desc=CODE_DESC[c.weather_code]||'nhiều mây';
+  document.getElementById('heroSub').innerHTML=
+    'Hiện tại trời <strong>'+desc+'</strong> · <strong>'+Math.round(c.temperature_2m)+'°</strong> · ẩm <strong>'+c.relative_humidity_2m+'%</strong> · gió <strong>'+Math.round(c.wind_speed_10m)+' km/h</strong>. '+
+    (raining?'Khả năng mưa hôm nay cao nhất <strong>'+maxPop+'%</strong>.':'Khả năng mưa hôm nay cao nhất '+maxPop+'%.');
+  const nowH=new Date().getHours();
+  let hi=d.hourly.time.findIndex(t=>new Date(t).getHours()===nowH); if(hi<0)hi=0;
+  const popNow=d.hourly.precipitation_probability[hi];
+  const chips=[
+    ['<path d="M13 2L4.5 13.5H11L9.5 22 19 10h-6.5L13 2z"/>',(CODE_DESC[c.weather_code]||'—')+' · đang diễn ra',false],
+    ['<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',Math.round(c.temperature_2m)+'° · ẩm '+c.relative_humidity_2m+'%',true],
+    ['<path d="M20 15.5c-1.5 0-2.5 1-3.5 1s-2-1-3.5-1-2.5 1-3.5 1-2-1-3.5-1"/><path d="M17.5 8a4.5 4.5 0 0 0 .42-8.98"/>','Mưa giờ này: '+popNow+'%',false]
+  ];
+  document.getElementById('chipRow').innerHTML=chips.map(ch=>
+    '<span class="chip'+(ch[2]?' hot':'')+'" role="listitem"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+ch[0]+'</svg>'+ch[1]+'</span>').join('');
+  const upd=fmtTime(WX.updatedAt||new Date());
+  document.getElementById('updTime').textContent='cập nhật '+upd;
+  document.getElementById('footUpd').textContent='cập nhật '+upd+(WX.live?'':' (bản tĩnh)');
+  const badge=document.getElementById('liveBadge');
+  badge.classList.toggle('off',!WX.live);
+  document.getElementById('liveTxt').textContent=WX.live?('TRỰC TIẾP · '+upd):('NGOẠI TUYẾN · '+upd);
+  // today cards
+  const tmax=Math.round(d.daily.temperature_2m_max[0]), tmin=Math.round(d.daily.temperature_2m_min[0]);
+  let rh=0,rp=-1; d.hourly.precipitation_probability.slice(0,24).forEach((p,i)=>{ if(p>rp){rp=p;rh=i;} });
+  const rhT=d.hourly.time[rh].slice(11,16);
+  const d1max=Math.round(d.daily.temperature_2m_max[1]), d1min=Math.round(d.daily.temperature_2m_min[1]), d1pop=d.daily.precipitation_probability_max[1];
+  document.getElementById('todayLede').textContent='Số liệu live từ Open-Meteo · cập nhật '+upd+'.';
+  const cards=[
+    {w:'Bây giờ',h:desc[0].toUpperCase()+desc.slice(1),big:Math.round(c.temperature_2m)+'°',p:'Ẩm '+c.relative_humidity_2m+'% · gió '+Math.round(c.wind_speed_10m)+' km/h · khả năng mưa '+popNow+'%.',warn:false,icon:'<path d="M13 2L4.5 13.5H11L9.5 22 19 10h-6.5L13 2z"/>'},
+    {w:'Hôm nay',h:'Cao '+tmax+'° / thấp '+tmin+'°',big:maxPop+'%',p:'Khả năng mưa cao nhất '+maxPop+'%, rơi vào khoảng '+rhT+'.',warn:maxPop>=50,icon:'<path d="M17.5 19a4.5 4.5 0 0 0 .42-8.98 6.5 6.5 0 0 0-12.7 1.61A4 4 0 0 0 6 19h11.5z"/>'},
+    {w:'Ngày mai',h:'Cao '+d1max+'° / thấp '+d1min+'°',big:d1pop+'%',p:d1pop>=40?'Khả năng mưa '+d1pop+'% — mang áo mưa cho chắc.':'Khả năng mưa '+d1pop+'% — ngày khá yên.',warn:d1pop>=50,icon:'<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'}
+  ];
+  document.getElementById('todayCards').innerHTML=cards.map(cd=>
+    '<article class="card rv in'+(cd.warn?' warn':'')+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+cd.icon+'</svg><div class="when">'+cd.w+'</div><h3>'+cd.h+'</h3><div class="big">'+cd.big+'</div><p>'+cd.p+'</p></article>').join('');
+  return true;
+}
 
-      /* Scroll camera + velocity marquee */
-      var ticking=false,lastScrollY=scrollY,lastScrollT=performance.now(),scrollVelocity=0,marqueeX=0,tracks=[].slice.call(document.querySelectorAll('.marquee-track'));
-      function renderScroll(){ticking=false;var vh=innerHeight||1,now=performance.now(),dy=scrollY-lastScrollY,dt=Math.max(16,now-lastScrollT);scrollVelocity=scrollVelocity*.76+(dy/dt)*.24;lastScrollY=scrollY;lastScrollT=now;acts.forEach(function(act,index){var scene=act.querySelector('.scene'),r=act.getBoundingClientRect(),p=Math.max(0,Math.min(1,-r.top/Math.max(1,r.height-vh))),ent=Math.max(0,Math.min(1,(vh-r.top)/(vh*.9))),pulse=Math.sin(p*Math.PI);scene.style.setProperty('--chapter-progress',Math.max(.08,p).toFixed(3));scene.style.setProperty('--scene-inset',(8-ent*8+p*1.2).toFixed(2)+'%');scene.style.setProperty('--scan-x',(-120+((p+index*.17)%1)*260).toFixed(1)+'%');if(!reduce){scene.style.setProperty('--scene-scale',(1.08-ent*.08+p*.025).toFixed(3));scene.style.setProperty('--scene-blur',(9-ent*9).toFixed(2)+'px');scene.style.setProperty('--camera-y',((p-.5)*-26).toFixed(1)+'px');scene.style.setProperty('--camera-x',(Math.sin(p*Math.PI)*8).toFixed(1)+'px');scene.style.setProperty('--cloud-y',((p-.5)*35).toFixed(1)+'px');scene.style.setProperty('--portal',pulse.toFixed(3));if(act.id==='act1'){var v=act.querySelector('video');if(v&&Number.isFinite(v.duration)&&v.duration>.2){var t=p*(v.duration-.1);if(Math.abs(v.currentTime-t)>.1)v.currentTime=t;}}}});updateTimeAxis();}
-      function onScroll(){if(!ticking){ticking=true;requestAnimationFrame(renderScroll);}}
-      addEventListener('scroll',onScroll,{passive:true});addEventListener('resize',onScroll,{passive:true});renderScroll();
-      function marqueeLoop(){if(!reduce){var speed=.32+Math.min(4,Math.abs(scrollVelocity)*3.6);marqueeX-=speed;if(marqueeX<-900)marqueeX=0;tracks.forEach(function(t,i){t.style.transform='translate3d('+(marqueeX*(i%2?-.9:1)).toFixed(1)+'px,0,0)';});scrollVelocity*=.97;}requestAnimationFrame(marqueeLoop);}marqueeLoop();
+function buildFilmStrip(){
+  const d=WX.data; if(!d) return;
+  const ticks=document.getElementById('fsTicks'), labels=document.getElementById('fsLabels');
+  ticks.innerHTML=''; labels.innerHTML='';
+  for(let i=0;i<24;i++){
+    const sc=sceneFor(d.hourly.weather_code[i]);
+    const t=document.createElement('div'); t.className='fs-tick'+(i===0?' now':'');
+    t.innerHTML='<i style="background:'+TICK_COLORS[sc]+'"></i>';
+    t.title=d.hourly.time[i].slice(11,16)+' · '+SCENES[sc].label;
+    ticks.appendChild(t);
+  }
+  [0,6,12,18,23].forEach(i=>{
+    const s=document.createElement('span'); s.textContent=d.hourly.time[i].slice(11,16); labels.appendChild(s);
+  });
+  const track=document.getElementById('fsTrack');
+  let scrubbing=false;
+  const toIdx=cx=>{ const r=track.getBoundingClientRect(); return clamp(Math.round((cx-r.left)/r.width*23),0,23); };
+  track.addEventListener('pointerdown',e=>{ scrubbing=true; track.setPointerCapture(e.pointerId); showTravel(toIdx(e.clientX)); });
+  track.addEventListener('pointermove',e=>{ if(scrubbing) showTravel(toIdx(e.clientX)); });
+  track.addEventListener('pointerup',()=>scrubbing=false);
+  track.addEventListener('pointercancel',()=>scrubbing=false);
+  track.addEventListener('keydown',e=>{
+    const cur=travelScene?parseInt(track.getAttribute('aria-valuenow')||'0',10):0;
+    if(e.key==='ArrowRight'){ showTravel(clamp(cur+1,0,23)); e.preventDefault(); }
+    else if(e.key==='ArrowLeft'){ showTravel(clamp(cur-1,0,23)); e.preventDefault(); }
+    else if(e.key==='Home'){ document.getElementById('backNow').click(); e.preventDefault(); }
+  });
+  document.getElementById('backNow').addEventListener('click',()=>{
+    applySceneToHero(sceneFor(d.current.weather_code),null);
+    document.getElementById('fsRead').textContent='Hiện tại';
+    track.setAttribute('aria-valuenow','0'); track.setAttribute('aria-valuetext','Hiện tại');
+    document.getElementById('fsThumb').style.left='0%'; document.getElementById('fsFill').style.width='0%';
+    Array.from(ticks.children).forEach(t=>t.classList.remove('sel'));
+  });
+}
 
-      /* Gaze seek Act II */
-      var actTwo=document.getElementById('act2'),actTwoScene=actTwo.querySelector('.scene'),actTwoVideo=actTwo.querySelector('video'),gazeTarget=0,gazeCurrent=0,gazeActive=false;function gazeSeek(){if(!gazeActive||reduce)return;gazeCurrent+=(gazeTarget-gazeCurrent)*.12;if(Number.isFinite(actTwoVideo.duration)&&actTwoVideo.duration>.2){actTwoVideo.pause();actTwoVideo.currentTime=gazeCurrent*(actTwoVideo.duration-.1);}requestAnimationFrame(gazeSeek);}if(fine&&!reduce){actTwoScene.addEventListener('pointerenter',function(){gazeActive=true;gazeCurrent=actTwoVideo.duration?actTwoVideo.currentTime/actTwoVideo.duration:.5;requestAnimationFrame(gazeSeek);});actTwoScene.addEventListener('pointermove',function(e){var r=actTwoScene.getBoundingClientRect();gazeTarget=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));});actTwoScene.addEventListener('pointerleave',function(){gazeActive=false;actTwoVideo.play().catch(function(){});});}
+function buildReel(){
+  const reel=document.getElementById('reel'); reel.innerHTML='';
+  const mk=(key,def,extreme)=>{
+    const b=document.createElement('button');
+    b.className='shot'+(extreme?' extreme':'');
+    b.setAttribute('aria-label','Xem cảnh '+def.label+' toàn màn hình');
+    const img=def.poster||def.img;
+    b.innerHTML='<img src="'+img+'" alt="" loading="lazy"/><span class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span><span class="cap"><b>'+def.label+'</b><span>'+(extreme?'Minh họa cực đoan':'Xem cho vui')+'</span></span>';
+    b.addEventListener('click',()=>openLightbox(key));
+    reel.appendChild(b);
+  };
+  Object.keys(SCENES).forEach(k=>mk(k,SCENES[k],false));
+  Object.keys(EXTREME).forEach(k=>mk(k,EXTREME[k],true));
+}
+function openLightbox(key){
+  const def=ALL[key], lb=document.getElementById('lightbox');
+  document.getElementById('lbName').textContent='ĐANG CHIẾU · '+def.label.toUpperCase()+' · MINH HỌA';
+  document.getElementById('lbHint').textContent=def.hint;
+  lbStage.show(key,true);
+  lbFX.setSystem(def.fx);
+  lbStage.setNight(0);
+  AU.setScene(key);
+  lb.classList.add('open');
+  document.body.style.overflow='hidden';
+  document.getElementById('lbClose').focus();
+}
+function closeLightbox(){
+  const lb=document.getElementById('lightbox');
+  lb.classList.remove('open');
+  document.body.style.overflow='';
+  lbStage.v.forEach(v=>{ try{v.pause()}catch(e){} });
+  AU.setScene(travelScene||currentScene);
+}
 
-      /* Act III storm drag, counter-rotation, procedural lightning */
-      var peak=document.getElementById('act3'),peakScene=peak.querySelector('.scene'),peakMedia=peak.querySelector('.peak-parallax'),peakTitle=peak.querySelector('.is-peak'),lightning=peak.querySelector('.lightning'),strikeSvg=peak.querySelector('.strike-svg');var pointerDown=false,stormDragging=false,dragStartX=0,dragStartY=0,dragLastX=0,dragLastT=0,stormOffset=0,stormVelocity=0,stormFrame=0,titleTarget=0,titleTilt=0,titleFrame=0,strikeCooldown=0,skipStrikeUntil=0;peakScene.style.touchAction='pan-y';
-      function renderStorm(){peakMedia.style.transform='scale(1.1) translate3d('+stormOffset.toFixed(2)+'px,0,0)';}function springStorm(){stormVelocity*=.94;stormOffset+=stormVelocity;if(Math.abs(stormVelocity)<.08)stormOffset+=(0-stormOffset)*.16;renderStorm();if(Math.abs(stormOffset)>.25||Math.abs(stormVelocity)>.08)stormFrame=requestAnimationFrame(springStorm);else{stormOffset=0;renderStorm();}}function tiltHeadline(){titleTilt+=(titleTarget-titleTilt)*.08;peakTitle.style.transform='rotate('+titleTilt.toFixed(3)+'deg)';if(Math.abs(titleTarget-titleTilt)>.01)titleFrame=requestAnimationFrame(tiltHeadline);}
-      if(!reduce){peakScene.addEventListener('pointerdown',function(e){pointerDown=true;stormDragging=false;dragStartX=dragLastX=e.clientX;dragStartY=e.clientY;dragLastT=performance.now();cancelAnimationFrame(stormFrame);peakScene.setPointerCapture(e.pointerId);});peakScene.addEventListener('pointermove',function(e){var r=peakScene.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*100,y=(e.clientY-r.top)/r.height*100;if(fine){peakScene.style.setProperty('--spot-x',x.toFixed(2)+'%');peakScene.style.setProperty('--spot-y',y.toFixed(2)+'%');titleTarget=Math.max(-4,Math.min(4,(x-50)*-.08));cancelAnimationFrame(titleFrame);titleFrame=requestAnimationFrame(tiltHeadline);}if(!pointerDown)return;var dx=e.clientX-dragStartX,dy=e.clientY-dragStartY;if(!stormDragging&&Math.abs(dx)>7&&Math.abs(dx)>Math.abs(dy))stormDragging=true;if(!stormDragging)return;e.preventDefault();var now=performance.now(),delta=e.clientX-dragLastX,dt=Math.max(8,now-dragLastT);stormOffset=Math.max(-r.width*.14,Math.min(r.width*.14,stormOffset+delta));stormVelocity=delta*16/dt;renderStorm();dragLastX=e.clientX;dragLastT=now;});peakScene.addEventListener('pointerup',function(){if(stormDragging){skipStrikeUntil=performance.now()+300;stormFrame=requestAnimationFrame(springStorm);}pointerDown=false;stormDragging=false;});peakScene.addEventListener('pointercancel',function(){pointerDown=false;stormDragging=false;stormFrame=requestAnimationFrame(springStorm);});peakScene.addEventListener('pointerleave',function(){titleTarget=0;cancelAnimationFrame(titleFrame);titleFrame=requestAnimationFrame(tiltHeadline);if(!pointerDown)stormFrame=requestAnimationFrame(springStorm);});}
-      function randomBolt(tx,ty){while(strikeSvg.firstChild)strikeSvg.removeChild(strikeSvg.firstChild);var pts=[],x=500,y=0,steps=12;for(var i=0;i<=steps;i++){var p=i/steps;y=ty*p;x+=(tx-x)*.16+(i?((Math.random()-.5)*85):0);if(i===steps){x=tx;y=ty;}pts.push([x,y]);}function addLine(points,cls){var line=document.createElementNS('http://www.w3.org/2000/svg','polyline');line.setAttribute('points',points.map(function(q){return q[0].toFixed(0)+','+q[1].toFixed(0);}).join(' '));if(cls)line.setAttribute('class',cls);strikeSvg.appendChild(line);}addLine(pts,'main');[4,7,9].forEach(function(index){var start=pts[index],branch=[start],bx=start[0],by=start[1],dir=Math.random()>.5?1:-1;for(var j=1;j<5;j++){bx+=dir*(30+Math.random()*45);by+=30+Math.random()*45;branch.push([bx,by]);}addLine(branch,'branch');});}
-      function feelThunder(){thunderBoom();if(!reduce&&(innerWidth<760||window.matchMedia('(pointer: coarse)').matches)&&navigator.vibrate)navigator.vibrate(60);}
-      function strikeAt(e){var now=performance.now();if(reduce||now<strikeCooldown||now<skipStrikeUntil)return;strikeCooldown=now+600;var r=peakScene.getBoundingClientRect(),tx=Math.max(35,Math.min(965,(e.clientX-r.left)/r.width*1000)),ty=Math.max(280,Math.min(920,(e.clientY-r.top)/r.height*1000));randomBolt(tx,ty);strikeSvg.classList.remove('strike');lightning.classList.remove('flash');whiteFlash.classList.remove('flash');peak.classList.remove('shock');void strikeSvg.offsetWidth;strikeSvg.classList.add('strike');lightning.classList.add('flash');whiteFlash.classList.add('flash');peak.classList.add('shock');feelThunder();setTimeout(function(){peak.classList.remove('shock');},420);}
-      peakScene.addEventListener('click',strikeAt);peakScene.addEventListener('keydown',function(e){if(e.key!=='Enter'&&e.key!==' ')return;e.preventDefault();var r=peakScene.getBoundingClientRect();strikeAt({clientX:r.left+r.width*.5,clientY:r.top+r.height*.54});});function queueFlash(){if(reduce)return;setTimeout(function(){if(peak.classList.contains('in-view')){lightning.classList.remove('flash');void lightning.offsetWidth;lightning.classList.add('flash');feelThunder();}queueFlash();},4200+Math.random()*3200);}queueFlash();
+function wireStatic(){
+  document.getElementById('audioBtn').addEventListener('click',function(){
+    const on=AU.toggle(travelScene||currentScene);
+    this.classList.toggle('on',on);
+    this.setAttribute('aria-pressed',String(on));
+    this.setAttribute('aria-label',on?'Tắt âm thanh theo cảnh':'Bật âm thanh theo cảnh');
+  });
+  document.getElementById('lbClose').addEventListener('click',closeLightbox);
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&document.getElementById('lightbox').classList.contains('open')) closeLightbox(); });
+  let rT=0;
+  window.addEventListener('resize',()=>{ clearTimeout(rT); rT=setTimeout(()=>{ heroFX.resize(); lbFX.resize(); drawStars(document.getElementById('heroStars')); },180); });
+  setInterval(()=>{ if(heroStage) heroStage.setNight(nightFactor()); },60000);
+  if(!RM){
+    const io=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);} }); },{threshold:.12,rootMargin:'0px 0px -8% 0px'});
+    document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+  }
+}
 
-      /* Star field */
-      var starCanvas=document.getElementById('starfield'),starCtx=starCanvas.getContext('2d'),stars=[],starRAF=0;function sizeStars(){var d=Math.min(2,devicePixelRatio||1),r=starCanvas.getBoundingClientRect();starCanvas.width=Math.max(1,r.width*d);starCanvas.height=Math.max(1,r.height*d);starCtx.setTransform(d,0,0,d,0,0);stars=[];for(var i=0;i<95;i++)stars.push({x:Math.random()*r.width,y:Math.random()*r.height*.72,s:.4+Math.random()*1.3,a:.12+Math.random()*.55,p:Math.random()*6.28});}function drawStars(now,still){var r=starCanvas.getBoundingClientRect();starCtx.clearRect(0,0,r.width,r.height);stars.forEach(function(s){var a=still?s.a*.7:s.a*(.55+.45*Math.sin(now*.0012+s.p));starCtx.fillStyle='rgba(220,240,249,'+a+')';starCtx.beginPath();starCtx.arc(s.x,s.y,s.s,0,Math.PI*2);starCtx.fill();});if(!still)starRAF=requestAnimationFrame(drawStars);}sizeStars();if(!reduce)starRAF=requestAnimationFrame(drawStars);else drawStars(0,true);addEventListener('resize',sizeStars,{passive:true});
-
-      /* Eye of the storm: draw + rotate + momentum */
-      var rainfall=[0,0,0,0,0,0,0,0,.1,.1,.2,.3,.6,.8,1,1.1,.9,.5,.2,.1,.1,0,0,0],chance=[8,7,6,5,5,7,12,16,20,24,32,42,57,63,68,71,66,54,38,28,22,16,12,9],poems=['Mái hiên còn giữ tiếng mưa hôm qua.','Con hẻm thở chậm dưới dây điện đen.','Một chiếc xe khuya xé đôi mặt nước.','Gió lật trang trời, không ai đọc.','Mây thấp chạm vào những nóc nhà im.','Chợ sớm nhóm lên trong hơi đất ẩm.','Sương còn ngái ngủ trên mái tôn.','Nắng mỏng mắc lại trên ban công.','Hàng cây thử nghiêng về phía gió.','Mặt đường sáng lên rồi thôi.','Mùi nhựa nóng chờ cơn mưa tới.','Bóng mây trườn qua vai thành phố.','Bữa trưa nghe trời đổi giọng.','Gió gom lá khô về một góc phố.','Ban công kéo vội quần áo vào nhà.','Trời đổ ập như ai hất cả xô nước.','Hẻm nhỏ đầy lên những tiếng dép chạy.','Nước tìm đường qua từng miệng cống.','Mưa mỏng dần sau lưng dòng xe.','Phố ướt loáng, đèn vàng lên.','Quán nhỏ hong ghế dưới mái hiên.','Khói xe tan vào lớp sương còn sót.','Thành phố khép cửa, nước vẫn đi.','Một giọt cuối cùng rơi đúng nửa đêm.'];var eye=document.getElementById('stormEye'),spokeGroup=document.getElementById('radarSpokes'),hourGroup=document.getElementById('radarHours'),eyeHour=document.getElementById('eyeHour'),eyePercent=document.getElementById('eyePercent'),eyeRain=document.getElementById('eyeRain'),eyePoem=document.getElementById('eyePoem'),recapVideos=[].slice.call(document.querySelectorAll('.recap-video')),eyeHourValue=19,eyeRot=0,eyeDragging=false,eyeLastAngle=0,eyeVelocity=0,eyeFrame=0,lastPoemHour=19,poemSwapTimer=0;
-      function polar(cx,cy,r,a){var rad=(a-90)*Math.PI/180;return[cx+Math.cos(rad)*r,cy+Math.sin(rad)*r];}
-      rainfall.forEach(function(amount,i){var a=i/24*360,p1=polar(250,250,98,a),p2=polar(250,250,128+Math.max(8,amount*82),a),line=document.createElementNS('http://www.w3.org/2000/svg','line');line.setAttribute('x1',p1[0]);line.setAttribute('y1',p1[1]);line.setAttribute('x2',p2[0]);line.setAttribute('y2',p2[1]);line.setAttribute('class','radar-spoke');line.style.transitionDelay=(i*40)+'ms';line.dataset.hour=i;spokeGroup.appendChild(line);if(i%3===0){var hp=polar(250,250,238,a),text=document.createElementNS('http://www.w3.org/2000/svg','text');text.setAttribute('x',hp[0]);text.setAttribute('y',hp[1]);text.setAttribute('class','radar-hour');text.dataset.hour=i;text.textContent=String(i).padStart(2,'0');hourGroup.appendChild(text);}});
-      var eyeObserver=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting)eye.classList.add('drawn');});},{threshold:.35});eyeObserver.observe(eye);
-      function weatherFor(a){return a>=.85?'intense':a>=.25?'rain':'calm';}
-      function updatePoem(hour){if(hour===lastPoemHour)return;lastPoemHour=hour;clearTimeout(poemSwapTimer);if(reduce){eyePoem.textContent=poems[hour];return;}eyePoem.classList.add('changing');poemSwapTimer=setTimeout(function(){eyePoem.textContent=poems[hour];eyePoem.classList.remove('changing');},170);}
-      function updateEye(value,animate){eyeHourValue=(Math.round(value)%24+24)%24;var amount=rainfall[eyeHourValue];eyeHour.textContent=String(eyeHourValue).padStart(2,'0')+':00';updatePoem(eyeHourValue);if(animate&&!reduce){var from=Number(eyePercent.textContent)||0,to=chance[eyeHourValue],start=performance.now();function count(now){var p=Math.min(1,(now-start)/360),e=1-Math.pow(1-p,3);eyePercent.textContent=Math.round(from+(to-from)*e);if(p<1)requestAnimationFrame(count);}requestAnimationFrame(count);}else eyePercent.textContent=chance[eyeHourValue];var label=amount>=.85?'mưa lớn':amount>=.25?'mưa vừa':amount>0?'mưa nhẹ':'trời yên';eyeRain.textContent=amount.toFixed(1)+' mm · '+label;eye.setAttribute('aria-valuenow',eyeHourValue);eye.setAttribute('aria-valuetext',eyeHourValue+' giờ, '+chance[eyeHourValue]+' phần trăm mưa. '+poems[eyeHourValue]);eye.querySelectorAll('.radar-spoke').forEach(function(s){s.classList.toggle('active',Number(s.dataset.hour)===eyeHourValue);});eye.querySelectorAll('.radar-hour').forEach(function(s){s.classList.toggle('active',Number(s.dataset.hour)===eyeHourValue);});recapVideos.forEach(function(v){var active=v.dataset.weather===weatherFor(amount);v.classList.toggle('active',active);if(active)v.play().catch(function(){});});}
-      function eyeAngle(e){var r=eye.getBoundingClientRect();return Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2))*180/Math.PI;}function setEyeRotation(rot){eyeRot=rot;spokeGroup.style.transform='rotate('+rot.toFixed(2)+'deg)';updateEye(Math.round((19-rot/15)),true);}function eyeMomentum(){eyeVelocity*=.94;eyeRot+=eyeVelocity;setEyeRotation(eyeRot);if(Math.abs(eyeVelocity)>.05)eyeFrame=requestAnimationFrame(eyeMomentum);else{eyeRot=Math.round(eyeRot/15)*15;setEyeRotation(eyeRot);}}
-      eye.addEventListener('pointerdown',function(e){if(reduce)return;eyeDragging=true;eyeLastAngle=eyeAngle(e);eyeVelocity=0;cancelAnimationFrame(eyeFrame);eye.setPointerCapture(e.pointerId);});eye.addEventListener('pointermove',function(e){if(!eyeDragging)return;var a=eyeAngle(e),d=a-eyeLastAngle;if(d>180)d-=360;if(d<-180)d+=360;eyeRot+=d;eyeVelocity=d;eyeLastAngle=a;setEyeRotation(eyeRot);});eye.addEventListener('pointerup',function(){if(!eyeDragging)return;eyeDragging=false;eyeFrame=requestAnimationFrame(eyeMomentum);});eye.addEventListener('pointercancel',function(){eyeDragging=false;eyeRot=Math.round(eyeRot/15)*15;setEyeRotation(eyeRot);});eye.addEventListener('keydown',function(e){if(e.key==='ArrowLeft'||e.key==='ArrowDown'){e.preventDefault();eyeRot+=15;setEyeRotation(eyeRot);}if(e.key==='ArrowRight'||e.key==='ArrowUp'){e.preventDefault();eyeRot-=15;setEyeRotation(eyeRot);}if(e.key==='Home'){e.preventDefault();eyeRot=19*15;setEyeRotation(eyeRot);}if(e.key==='End'){e.preventDefault();eyeRot=-4*15;setEyeRotation(eyeRot);}});updateEye(19,false);
-
-      /* District film deck */
-      var stage=document.getElementById('districtStage'),track=document.getElementById('districtTrack'),cards=[].slice.call(track.children),deckDots=document.getElementById('deckDots'),prev=document.getElementById('deckPrev'),next=document.getElementById('deckNext'),deckIndex=0,deckDown=false,deckStartX=0,deckDelta=0,deckBase=0;
-      cards.forEach(function(card,i){var b=document.createElement('button');b.className='deck-dot'+(i===0?' active':'');b.type='button';b.setAttribute('aria-label','Xem '+card.querySelector('.district-name').textContent);b.addEventListener('click',function(){setDeck(i);});deckDots.appendChild(b);});var deckButtons=[].slice.call(deckDots.children);
-      function deckTarget(i){var card=cards[i],stageR=stage.getBoundingClientRect();return-(card.offsetLeft-(stageR.width-card.offsetWidth)/2);}function renderDeck(x){track.style.transform='translate3d('+x.toFixed(1)+'px,0,0)';}
-      function setDeck(i){deckIndex=Math.max(0,Math.min(cards.length-1,i));deckBase=deckTarget(deckIndex);renderDeck(deckBase);cards.forEach(function(c,n){c.classList.toggle('active',n===deckIndex);c.setAttribute('aria-hidden',n===deckIndex?'false':'true');});deckButtons.forEach(function(b,n){b.classList.toggle('active',n===deckIndex);});prev.disabled=deckIndex===0;next.disabled=deckIndex===cards.length-1;}
-      prev.addEventListener('click',function(){setDeck(deckIndex-1);});next.addEventListener('click',function(){setDeck(deckIndex+1);});stage.addEventListener('pointerdown',function(e){deckDown=true;deckStartX=e.clientX;deckDelta=0;track.classList.add('dragging');stage.setPointerCapture(e.pointerId);});stage.addEventListener('pointermove',function(e){if(!deckDown)return;deckDelta=e.clientX-deckStartX;if(Math.abs(deckDelta)>8)e.preventDefault();renderDeck(deckBase+deckDelta*.8);});stage.addEventListener('pointerup',function(){if(!deckDown)return;deckDown=false;track.classList.remove('dragging');if(Math.abs(deckDelta)>70)setDeck(deckIndex+(deckDelta<0?1:-1));else setDeck(deckIndex);});stage.addEventListener('pointercancel',function(){deckDown=false;track.classList.remove('dragging');setDeck(deckIndex);});addEventListener('resize',function(){setDeck(deckIndex);},{passive:true});setDeck(0);
-
-      document.querySelectorAll('video').forEach(function(v){v.play().catch(function(){});});
-      /* Keep the cold-open lens alive even before the first scroll. */
-      if(!reduce){var breatheStart=performance.now();(function breathe(now){var phase=(now-breatheStart)*.00055,base=22+Math.sin(phase)*2.6;if(!holdStart)coldOpen.style.setProperty('--aperture-size',base.toFixed(2)+'%');requestAnimationFrame(breathe);})(breatheStart);}
-    })();
-  </script>
+async function boot(){
+  heroStage=new VideoStage({vA:document.getElementById('vvA'),vB:document.getElementById('vvB'),poster:document.getElementById('heroPoster'),grade:document.getElementById('heroGrade'),stars:document.getElementById('heroStars'),onShown:null});
+  heroFX=new FXEngine(document.getElementById('heroFx'),document.getElementById('heroStage'));
+  lbStage=new VideoStage({vA:document.getElementById('lbVvA'),vB:document.getElementById('lbVvB'),poster:document.getElementById('lbPoster'),grade:document.getElementById('lbGrade'),stars:null,onShown:null});
+  lbFX=new FXEngine(document.getElementById('lbFx'),document.getElementById('lbStage'));
+  drawStars(document.getElementById('heroStars'));
+  wireStatic();
+  buildReel();
+  watchFX(heroFX,document.getElementById('answer'));
+  // FX chỉ chạy khi hero visible; lightbox fx chạy khi mở
+  new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.target.classList.contains('open')) lbFX.start(); else lbFX.stop(); }); }).observe(document.getElementById('lightbox'));
+  await WX.load();
+  if(WX.data&&renderLive()){
+    const sc=sceneFor(WX.data.current.weather_code);
+    applySceneToHero(sc,null);
+    buildFilmStrip();
+    heroStage.setNight(nightFactor());
+    WX.start(()=>{
+      const ns=sceneFor(WX.data.current.weather_code);
+      if(ns!==currentScene&&!travelScene){
+        renderLive();
+        applySceneToHero(ns,'Trời vừa chuyển '+SCENES[ns].label.toLowerCase()+' · '+fmtTime(new Date()));
+      } else renderLive();
+    });
+  }else{
+    // fallback: không có số liệu
+    document.getElementById('heroSub').textContent='Không lấy được số liệu thời tiết. Đang hiện cảnh mẫu.';
+    document.getElementById('liveTxt').textContent='KHÔNG CÓ SỐ LIỆU';
+    document.getElementById('liveBadge').classList.add('off');
+    applySceneToHero('storm',null);
+  }
+  window.__preHide();
+}
+boot();
+</script>
 </body>
 </html>
